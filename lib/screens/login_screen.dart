@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/screens/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -60,6 +61,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     setState(() {
                       _selectedMode = newSelection.first;
                     });
+                    if (_selectedMode == AuthMode.register) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RegisterScreen(),
+                        ),
+                      );
+                    }
                   },
                 ),
               ),
