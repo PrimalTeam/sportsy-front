@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:sportsy_front/modules/jwt_logic/jwt_decoder.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,11 +60,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _incrementCounter() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
+      String token =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE4MTAwMDAyMjB9.-OU1ziFUizhOsphKpSkL61TUvVSwCcSSptw8eZi6S3A";
+
+      // Dekodowanie payload
+      Map<String, dynamic> payload = JwtDecoder.decode(token);
+
+      print("UserId: ${payload['name']}");
+      print("Role: ${payload['sub']}");
+
+      // Sprawdzanie, czy token wygasł
+      bool isExpired = isTokenExpired(token);
+      print("Token wygasł: $isExpired");
       _counter++;
     });
   }
