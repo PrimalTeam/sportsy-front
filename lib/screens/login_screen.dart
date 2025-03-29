@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/dto/auth_dto.dart';
 import 'package:sportsy_front/screens/register_screen.dart';
+import '../modules/services/auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,13 +19,17 @@ class _LoginScreenState extends State<LoginScreen> {
   AuthMode _selectedMode = AuthMode.login;
 
   void _submit() {
-    String email = _emailController.text;
-    String password = _passwordController.text;
-    if (_selectedMode == AuthMode.login) {
-      print("Logging in with $email and password: $password");
-    } else {
-      print("Registering user with $email and password: $password");
-    }
+    AuthService.login(
+      LoginDto(
+        email: _emailController.text,
+        password: _passwordController.text,
+      ),
+    ).then((response) {
+      print(response.data);
+    }).catchError((error) {
+      print("Error during registration: $error");
+    });
+    print("*************************************");
   }
 
   @override

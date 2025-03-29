@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/dto/auth_dto.dart';
 import 'login_screen.dart';
+import '../modules/services/auth.dart';
+import '../modules/services/api.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,14 +24,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   AuthMode _selectedMode = AuthMode.register;
 
   void _submit() {
-    // akcja dla klikniecia przycisku rejestracji
-    print("User Registration");
-    print("Name: ${_nameController.text}");
-    print("Surname: ${_surnameController.text}");
-    print("Nickname: ${_nicknameController.text}");
-    print("Email: ${_emailController.text}");
-    print("Password: ${_passwordController.text}");
-    print("Repeated password: ${_repeatPasswordController.text}");
+    AuthService.register(
+      RegisterDto(
+        email: _emailController.text,
+        password: _passwordController.text,
+        userName: _nicknameController.text,
+      ),
+    ).then((response) {
+      print(response.data);
+      _navigateToLogin();
+    }).catchError((error) {
+      print("Error during registration: $error");
+    });
+    
+  print("${hosturl}--------------------------------------------------------------------------");
   }
 
   void _navigateToLogin() {
