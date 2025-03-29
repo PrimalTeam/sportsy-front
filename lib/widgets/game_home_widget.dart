@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/modules/game_list_struct.dart';
+import 'package:sportsy_front/screens/game_page.dart';
 
 class GameHomeWidget extends StatelessWidget {
   final GameDetails gameDetails;
@@ -7,7 +8,11 @@ class GameHomeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    
+    return 
+    GestureDetector(
+      onTap: ()  {Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(gameDetails: gameDetails) ),);},
+    child: Container(
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -78,6 +83,7 @@ class GameHomeWidget extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
