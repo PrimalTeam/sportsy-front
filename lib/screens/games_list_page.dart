@@ -27,14 +27,14 @@ class _MyHomePageState extends State<MyHomePage> {
         title: 'Games list',
         onSearchChanged: (value) {
           setState(() {
-            searchQuery = value; // Update search query
+            searchQuery = value;
           });
         },
       ),
       body: ListView.builder(
-        itemCount: filteredGames.length, // Use filteredGames
+        itemCount: filteredGames.length,
         itemBuilder: (context, index) {
-          return GameHomeWidget(gameDetails: filteredGames[index]); // Use filteredGames
+          return GameHomeWidget(gameDetails: filteredGames[index]);
         },
       ),
       bottomNavigationBar: BottomNavigationBar(

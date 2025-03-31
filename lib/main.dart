@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'screens/games_list_page.dart';
 import 'screens/login_screen.dart';
 
 void main() {
@@ -13,25 +12,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.transparent,
-        textTheme: const TextTheme(
-          headlineLarge: TextStyle(
-            color: Colors.white,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.83,
-          ),
-        ),
-      ),
-      home: const MyHomePage(title: 'Games list'),
-    );
-  }
-}
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
       home: const LoginScreen(),
     );
   }

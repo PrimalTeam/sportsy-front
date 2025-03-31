@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
+import 'package:sportsy_front/screens/games_list_page.dart';
 import 'package:sportsy_front/screens/register_screen.dart';
 import '../modules/services/auth.dart';
 
@@ -25,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       ),
     ).then((response) {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyHomePage(title: "nie wiem xd"),));
       print(response.data);
     }).catchError((error) {
       print("Error during registration: $error");
