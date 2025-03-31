@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/screens/profile_jwt_test.dart';
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MyAppBar({super.key, required this.title, this.onSearchChanged});
@@ -16,10 +17,17 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
           children: [
             Row(
               children: [
+                GestureDetector(
+                  onTap: (){ 
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileJwtTestScreen(),));
+                  },
+                
+                child:
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: Color(0xff283963),
                   child: Icon(Icons.person, color: Colors.black),
+                ),
                 ),
                 const SizedBox(width: 10),
                 Text(

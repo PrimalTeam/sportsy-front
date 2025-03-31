@@ -1,5 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
+import 'package:jwt_decoder/jwt_decoder.dart';
 class JwtStorageService {
   static const _jwtTokenKey = 'jwt_token';
   static const _refreshTokenKey = 'refresh_token';
@@ -48,6 +48,15 @@ class JwtStorageService {
       await _storage.delete(key: _refreshTokenKey);
     } catch (e) {
       print("Error clearing tokens: $e");
+    }
+  }
+    static String? getDataFromToken(token, String dataType) {
+    try {
+      Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+      return decodedToken[dataType].toString();
+    } catch (e) {
+      print("Error retrieving token data: $e");
+      return null;
     }
   }
 }
