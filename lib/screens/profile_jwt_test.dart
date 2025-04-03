@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../modules/services/jwt_logic.dart';
 
 class ProfileJwtTestScreen extends StatelessWidget {
-  const ProfileJwtTestScreen({Key? key}) : super(key: key);
+  const ProfileJwtTestScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

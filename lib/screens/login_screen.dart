@@ -8,12 +8,12 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
 enum AuthMode { login, register }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -31,7 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }).catchError((error) {
       print("Error during registration: $error");
     });
-    print("*************************************");
   }
 
   @override
