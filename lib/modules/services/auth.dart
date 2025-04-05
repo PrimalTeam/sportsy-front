@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:sportsy_front/modules/services/auth_interceptor.dart';
 import 'api.dart';
 import 'jwt_logic.dart';
 import '../../dto/auth_dto.dart';
 
-class AuthService {
-  static final String baseUrl = '$hosturl/auth';
+class AuthService extends Interceptor {
+  
+  static final String baseUrl = hosturl;
   static final Dio _dio = Dio(
     BaseOptions(
       baseUrl: baseUrl,
@@ -12,12 +14,14 @@ class AuthService {
         'Content-Type': 'application/json; charset=UTF-8',
       },
     ),
-  );
-  
+  )..interceptors.add(AuthInterceptor()); // Pass Dio instance
+
+  static Dio get dio => _dio; // Public getter for _dio
+
   static Future<Response> login(LoginDto login) async {
     try {
       final response = await _dio.post(
-        '/login',
+        '/auth/login',
         data: login.toJson(),
       );
       
@@ -38,8 +42,20 @@ class AuthService {
   static Future<Response> register(RegisterDto register) async {
     try {
       final response = await _dio.post(
-        '/register',
+        '/auth/register',
         data: register.toJson(),
+      );
+      return response;
+    } on DioException catch (e) {
+      print("Registration error: ${e.response?.data}");
+      throw Exception('Failed to register: ${e.response?.data}');
+    }
+  }
+
+    static Future<Response> test() async {
+    try {
+      final response = await _dio.get(
+        '/user/dateinfo',
       );
       return response;
     } on DioException catch (e) {

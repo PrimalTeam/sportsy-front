@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
 import 'login_screen.dart';
 import '../modules/services/auth.dart';
-import '../modules/services/api.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,30 +18,45 @@ class RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _repeatPasswordController = TextEditingController();
+  final TextEditingController _repeatPasswordController =
+      TextEditingController();
 
   AuthMode _selectedMode = AuthMode.register;
 
   void _submit() {
     AuthService.register(
-      RegisterDto(
-        email: _emailController.text,
-        password: _passwordController.text,
-        userName: _nicknameController.text,
-      ),
-    ).then((response) {
-      print(response.data);
-      _navigateToLogin();
-    }).catchError((error) {
-      print("Error during registration: $error");
-    });
-    
-  print("${hosturl}--------------------------------------------------------------------------");
+          RegisterDto(
+            email: _emailController.text,
+            password: _passwordController.text,
+            userName: _nicknameController.text,
+          ),
+        )
+        .then((response) {
+          if (mounted) {
+            if (response.statusCode == 201) {
+              print(response.data);
+              _navigateToLogin();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("E-mail or username is already taken.")),
+              );
+            }
+          }
+        })
+        .catchError((error) {
+          if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Register error.")),
+          );
+          }
+        });
   }
 
   void _navigateToLogin() {
-    print("Redirected to the login page");
-    Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
   }
 
   @override
@@ -81,7 +95,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                       setState(() {
                         _selectedMode = newSelection.first;
                       });
-                      
+
                       if (_selectedMode == AuthMode.login) {
                         _navigateToLogin();
                       }

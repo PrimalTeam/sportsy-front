@@ -28,20 +28,22 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  jwt_decoder: ^2.0.1    
-  json_annotation: ^4.8.0
-  json_serializable: ^6.5.4
-  http: ^1.3.0
+  jwt_decoder:     
+  json_annotation: 
+  json_serializable:
+  http:
+  dartz: 
+  loading_animation_widget:
   flutter:
     sdk: flutter
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-  built_value: ^8.9.5
-  flutter_secure_storage: ^9.2.4
-  dio: ^5.8.0+1
-  dart_jsonwebtoken: ^3.2.0
+  cupertino_icons:
+  built_value:
+  flutter_secure_storage:
+  dio:
+  dart_jsonwebtoken:
 
 dev_dependencies:
   flutter_test:

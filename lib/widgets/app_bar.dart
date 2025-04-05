@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/screens/profile_jwt_test.dart';
+import '../modules/services/jwt_logic.dart';
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MyAppBar({super.key, required this.title, this.onSearchChanged});
@@ -47,7 +48,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                     
                     icon: const Icon(Icons.settings, color: Colors.white),
                     onPressed: () {
-                      // Add your settings action here
+                      JwtStorageService.clearTokens();
                     },
                   ),
                 ),

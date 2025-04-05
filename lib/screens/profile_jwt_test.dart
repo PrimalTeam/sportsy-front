@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../modules/services/jwt_logic.dart';
+import '../modules/services/auth.dart';
 
 class ProfileJwtTestScreen extends StatelessWidget {
   const ProfileJwtTestScreen({super.key});
@@ -46,10 +47,20 @@ class ProfileJwtTestScreen extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {
-                // Add logout functionality here
+              onPressed: () async {
+                try {
+                  final response = await AuthService.test(); // Perform GET request
+                  final profileData = response.data;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Profile: ${profileData.toString()}')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error fetching profile: $e')),
+                  );
+                }
               },
-              child: const Text('Logout'),
+              child: const Text('Fetch Profile'),
             ),
           ],
         ),

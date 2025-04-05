@@ -59,4 +59,17 @@ class JwtStorageService {
       return null;
     }
   }
+
+  static Future<bool> isTokenMissingOrExpired() async {
+    try {
+      final token = await getToken();
+      if (token == null || JwtDecoder.isExpired(token)) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Error checking token status: $e");
+      return true;
+    }
+  }
 }
