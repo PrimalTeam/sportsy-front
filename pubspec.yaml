@@ -32,8 +32,10 @@ dependencies:
   json_annotation: 
   json_serializable:
   http:
+  dropdown_search:
   dartz: 
   loading_animation_widget:
+  image_picker:
   flutter:
     sdk: flutter
 

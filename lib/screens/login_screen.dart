@@ -116,9 +116,6 @@ class LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: "Email",
                       prefixIcon: const Icon(Icons.alternate_email),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
                     ),
                     keyboardType: TextInputType.emailAddress,
                   ),

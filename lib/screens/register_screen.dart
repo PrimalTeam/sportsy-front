@@ -110,9 +110,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: "Name",
                     prefixIcon: const Icon(Icons.person),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
-                    ),
+                  
                   ),
                 ),
                 const SizedBox(height: 20),
