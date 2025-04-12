@@ -13,8 +13,10 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      
       appBar: MyAppBar(title: "Create Tournament"),
       body: const SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 24.0),
           child: TournamentForm(),
       ),
     );

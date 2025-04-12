@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
 import 'package:sportsy_front/screens/games_list_page.dart';
@@ -63,7 +64,6 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.amber,
       body: Stack(
         children: [
           Center(
@@ -83,13 +83,16 @@ class LoginScreenState extends State<LoginScreen> {
                       segments: const <ButtonSegment<AuthMode>>[
                         ButtonSegment<AuthMode>(
                           value: AuthMode.login,
-                          label: Text("Login"),
+                          label: Text("Login", style: TextStyle(
+                            color: Colors.black,
+                          ),),
                           icon: Icon(Icons.login),
+
                         ),
                         ButtonSegment<AuthMode>(
                           value: AuthMode.register,
-                          label: Text("Register"),
-                          icon: Icon(Icons.app_registration),
+                          label: Text("Register", style: TextStyle(color: Colors.grey)),
+                          icon: Icon(Icons.app_registration, color: Colors.grey,),
                         ),
                       ],
                       selected: <AuthMode>{_selectedMode},
@@ -100,7 +103,7 @@ class LoginScreenState extends State<LoginScreen> {
                         if (_selectedMode == AuthMode.register) {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
+                            CupertinoPageRoute(
                               builder: (context) => RegisterScreen(),
                             ),
                           );
@@ -126,27 +129,17 @@ class LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: "Password",
                       prefixIcon: const Icon(Icons.lock),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
+                     
                     ),
                     obscureText: true,
                   ),
                   const SizedBox(height: 20),
 
                   SizedBox(
-                    width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                      ),
                       child: Text(
-                        "Login",
-                        style: const TextStyle(fontSize: 18),
+                        "LOGIN",
                       ),
                     ),
                   ),

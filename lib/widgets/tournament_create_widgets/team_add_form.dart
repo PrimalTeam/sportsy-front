@@ -37,29 +37,36 @@ class _TeamAddFormState extends State<TeamAddForm> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text("Team name"),
         TextField(
           controller: _nameController,
-          decoration: const InputDecoration(
-            hintText: 'Enter team name',
+          decoration: const InputDecoration(hintText: 'Team name'),
+        ),
+        const SizedBox(height: 15),
+        SizedBox(
+          height: 100,
+          width: 100,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
+            onPressed: _pickImage,
+
+            child:
+                _image == null
+                    ? const Center(
+                      child: Text('Add logo', style: TextStyle(fontSize: 12)),
+                    )
+                    : ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: Image.file(
+                        _image!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                    ),
           ),
         ),
-        GestureDetector(
-          onTap: _pickImage,
-          child: Container(
-            width: 150,
-            height: 150,
-            decoration: BoxDecoration(
-            ),
-            child: _image == null
-                ? const Center(child: Text('Add logo'))
-                : Image.file(_image!, fit: BoxFit.cover),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: const Text("Add team"),
-        ),
+        const SizedBox(height: 15),
+        ElevatedButton(onPressed: _submit, child: const Text("Add team")),
       ],
     );
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
 import 'login_screen.dart';
@@ -55,14 +56,13 @@ class RegisterScreenState extends State<RegisterScreen> {
   void _navigateToLogin() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
+      CupertinoPageRoute(builder: (context) => LoginScreen()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.amber,
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -81,12 +81,12 @@ class RegisterScreenState extends State<RegisterScreen> {
                     segments: const <ButtonSegment<AuthMode>>[
                       ButtonSegment<AuthMode>(
                         value: AuthMode.login,
-                        label: Text("Login"),
-                        icon: Icon(Icons.login),
+                        label: Text("Login", style: TextStyle(color: Colors.grey),),
+                        icon: Icon(Icons.login, color: Colors.grey,),
                       ),
                       ButtonSegment<AuthMode>(
                         value: AuthMode.register,
-                        label: Text("Register"),
+                        label: Text("Register", style: TextStyle(color: Colors.black),),
                         icon: Icon(Icons.app_registration),
                       ),
                     ],
@@ -179,18 +179,13 @@ class RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
 
                 SizedBox(
-                  width: double.infinity,
+
                   child: ElevatedButton(
                     onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
+
                     child: const Text(
-                      "Register",
-                      style: TextStyle(fontSize: 18),
+                      "REGISTER",
+                      style: TextStyle(fontSize: 16),
                     ),
                   ),
                 ),
