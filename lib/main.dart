@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
+import 'package:sportsy_front/screens/tournament_info.dart';
 import 'screens/games_list_page.dart';
 import 'screens/login_screen.dart';
 import 'screens/create_tournament_page.dart';
@@ -40,9 +42,10 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/ctournament',
+      initialRoute: '/infoPage',
       routes: {
         '/login': (context) => const LoginScreen(),
+        '/infoPage': (context) => TournamentInfoPage(tournamentDetails: TournamentInfo(title: "Tytuł", description: "Opis", dateEnd: DateTime.now(),  dateStart: DateTime.now()) ,),
         '/home': (context) => const MyHomePage(title: "Title"),
         '/ctournament': (context) => const CreateTournamentPage(),
       },

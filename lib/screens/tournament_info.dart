@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
 
 class AppColors {
@@ -11,7 +12,7 @@ class AppColors {
 }
 
 class TournamentInfoPage extends StatefulWidget {
-  final dynamic tournamentDetails; 
+  final TournamentInfo tournamentDetails; 
 
   const TournamentInfoPage({super.key, required this.tournamentDetails});
 
@@ -41,7 +42,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
       appBar: AppBar(
         title: Row(
           children: [
-            Text(widget.tournamentDetails.tournamentName, style: TextStyle(color: AppColors.textColor)),
+            Text(widget.tournamentDetails.title, style: TextStyle(color: AppColors.textColor)),
             const SizedBox(width: 8),
             Icon(Icons.circle_outlined, color: AppColors.smallIconsColor),
             const Spacer(),
@@ -143,7 +144,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
             ),
             const SizedBox(height: 8.0),
             Text(
-              widget.tournamentDetails.tournamentName, //TRZEBA BEDZIE STWORZYC LISTE DLA TURNIEJOW TAK JAK JEST DLA GIER
+              widget.tournamentDetails.title, //TRZEBA BEDZIE STWORZYC LISTE DLA TURNIEJOW TAK JAK JEST DLA GIER
               style: TextStyle(
                 fontSize: 18.0,
                 color: AppColors.smallIconsColor,
