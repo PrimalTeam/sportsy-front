@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/widgets/tournament_create_widgets/team_add_form.dart';
 
 Future<void> customMainBottomModalWindow({
@@ -11,24 +12,24 @@ Future<void> customMainBottomModalWindow({
   return showModalBottomSheet(
     context: context,
     isScrollControlled: isScrollControlled,
-    backgroundColor: Color.fromARGB(255, 34, 34, 34),
+    backgroundColor: AppColors.primary,
 
     builder:
         (context) => Container(
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(
-                color: Color.fromARGB(255, 212, 175, 55),
+                color: AppColors.accent,
                 width: 4,
                 style: BorderStyle.solid,
               ),
               left: BorderSide(
-                color: Color.fromARGB(255, 212, 175, 55),
+                color: AppColors.accent,
                 width: 4,
                 style: BorderStyle.solid,
               ),
               right: BorderSide(
-                color: Color.fromARGB(255, 212, 175, 55),
+                color: AppColors.accent,
                 width: 4,
                 style: BorderStyle.solid,
               ),

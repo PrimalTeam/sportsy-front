@@ -4,6 +4,7 @@ import '../widgets/game_home_widget.dart';
 import '../modules/game_list_data.dart';
 
 
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -16,6 +17,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String searchQuery = '';
 
+void onSearchChanged(String value) {
+    setState(() {
+      searchQuery = value;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredGames = gameData.where((game) {
@@ -25,11 +32,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: MyAppBar(
         title: 'Games list',
-        onSearchChanged: (value) {
-          setState(() {
-            searchQuery = value;
-          });
-        },
       ),
       body: ListView.builder(
         itemCount: filteredGames.length,

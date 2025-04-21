@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sportsy_front/custom_colors.dart';
+import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
+import 'package:sportsy_front/screens/tournament_games_page.dart';
+import 'package:sportsy_front/screens/tournament_info.dart';
 import 'screens/games_list_page.dart';
 import 'screens/login_screen.dart';
 import 'screens/create_tournament_page.dart';
@@ -19,12 +23,12 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/ctournament',
+      initialRoute: '/tournamentgames',
       theme: ThemeData(
         
 
         iconTheme: IconThemeData(
-          color: Color.fromARGB(255, 212, 175, 55),
+          color: AppColors.accent,
         ),
         scaffoldBackgroundColor: const Color.fromARGB(255, 0,0,0,),
 
@@ -33,10 +37,10 @@ class MyApp extends StatelessWidget {
           displayColor: Colors.white,
         ),
         inputDecorationTheme: InputDecorationTheme(
-          prefixIconColor: Color.fromARGB(255, 212, 175, 55),
+          prefixIconColor: AppColors.accent,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
           filled: true,
-          fillColor: Color.fromARGB(255, 34, 34, 34),
+          fillColor: AppColors.primary,
           contentPadding: const EdgeInsets.symmetric(
             vertical: 10,
             horizontal: 15,
@@ -59,7 +63,7 @@ class MyApp extends StatelessWidget {
             ),
 
             filled: true,
-            fillColor: Color.fromARGB(255, 34, 34, 34),
+            fillColor: AppColors.primary,
             hintStyle: GoogleFonts.poppins(color: Colors.white54),
             labelStyle: GoogleFonts.poppins(color: Colors.white),
           ),
@@ -72,11 +76,11 @@ class MyApp extends StatelessWidget {
               fontWeight: FontWeight.bold,
               fontSize: 16,
             ),
-            backgroundColor: Color.fromARGB(255, 34, 34, 34),
+            backgroundColor: AppColors.primary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(100),
               side: const BorderSide(
-                color: Color.fromARGB(255, 212, 175, 55),
+                color: AppColors.accent,
                 width: 2,
               ),
             ),
@@ -84,6 +88,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
       routes: {
+        '/cinfopage': (context) => TournamentInfoPage(tournamentDetails: TournamentInfo(title: "tytuł", description: "opis", dateStart: DateTime.now(), dateEnd: DateTime.now())),
+        '/tournamentgames': (context) => const TournamentGamesPage(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const MyHomePage(title: "Title"),
         '/ctournament': (context) => const CreateTournamentPage(),

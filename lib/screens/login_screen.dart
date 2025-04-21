@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
 import 'package:sportsy_front/screens/games_list_page.dart';
 import 'package:sportsy_front/screens/register_screen.dart';
@@ -84,7 +85,7 @@ class LoginScreenState extends State<LoginScreen> {
                         ButtonSegment<AuthMode>(
                           value: AuthMode.login,
                           label: Text("Login", style: TextStyle(
-                            color: Colors.black,
+                            color: AppColors.background,
                           ),),
                           icon: Icon(Icons.login),
 
