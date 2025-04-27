@@ -9,10 +9,12 @@ class GamePage extends StatelessWidget {
 
   const GamePage({super.key, required this.gameDetails});
 
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     appBar: MyAppBar(title: gameDetails.gameName), // Use game name as title
+     appBar: MyAppBar(title: gameDetails.gameName),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

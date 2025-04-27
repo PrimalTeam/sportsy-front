@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/dto/get_room_dto.dart';
 import 'package:sportsy_front/modules/game_list_struct.dart';
 import 'package:sportsy_front/screens/game_page.dart';
 
 class GameHomeWidget extends StatelessWidget {
-  final GameDetails gameDetails;
+  final GetRoomDto gameDetails;
   const GameHomeWidget({super.key, required this.gameDetails});
 
   @override
@@ -16,10 +17,10 @@ class GameHomeWidget extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        border:
-            gameDetails.isHost
-                ? Border.all(color: Colors.white, width: 3)
-                : null,
+        //border:
+            //gameDetails.role == "host"
+            //  ? Border.all(color: Colors.white, width: 3)
+            //  : null,
         color: Color(0xff283963),
         borderRadius: BorderRadius.circular(100),
       ),
@@ -34,18 +35,18 @@ class GameHomeWidget extends StatelessWidget {
               color: Color(0xff130f34),
             ),
             child: Icon(
-              gameDetails.sportType == "football"
+              gameDetails.icon == "football"
                   ? Icons.sports_soccer
-                  : gameDetails.sportType == "basketball"
+                  : gameDetails.icon == "basketball"
                   ? Icons.sports_basketball
-                  : gameDetails.sportType == "volleyball"
+                  : gameDetails.icon == "volleyball"
                   ? Icons.sports_volleyball
                   : Icons.question_mark,
               color: Colors.white,
             ),
           ),
           const SizedBox(width: 10),
-          Text(gameDetails.gameName),
+          Text(gameDetails.name),
           Spacer(),
           IconButton(
             onPressed: () {
@@ -59,7 +60,7 @@ class GameHomeWidget extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          gameDetails.gameName,
+                          gameDetails.name,
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,

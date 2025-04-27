@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sportsy_front/dto/create_room_dto.dart';
+import 'package:sportsy_front/modules/services/auth.dart';
 import 'package:sportsy_front/modules/tournament_services/creation_team_list.dart';
 import 'package:sportsy_front/modules/tournament_services/sport_type_enum.dart';
 import 'package:sportsy_front/widgets/custom_main_bottom_modal_window.dart';
@@ -13,7 +15,62 @@ class TournamentForm extends StatefulWidget {
   State<TournamentForm> createState() => _TournamentFormState();
 }
 
+
+
+
+
+
 class _TournamentFormState extends State<TournamentForm> {
+final tournamentTitleController = TextEditingController();
+void createTournamentClickAction() async {
+
+
+  if(tournamentTitleController.text!=""){
+  final roomDto = CreateRoomDto(tournamentTitleController.text);
+try{
+  await AuthService.createRoom(roomDto);
+    print("Tournament Created!");
+  }
+  catch (e) {
+    print("An error occurred while creating the tournament: $e");
+  }
+
+  }
+  else{
+    
+   _showMyDialog();
+  }
+
+}
+
+Future<void> _showMyDialog() async {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Please set tournament title!'),
+        content: const SingleChildScrollView(
+          child: ListBody(
+            children: <Widget>[
+              Text('This is a demo alert dialog.'),
+              Text('Would you like to approve of this message?'),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Approve'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
   DateTime? _selectedDateTimeStart;
   DateTime? _selectedDateTimeEnd;
 
@@ -59,6 +116,7 @@ class _TournamentFormState extends State<TournamentForm> {
       children: [
         SizedBox(height: 15),
         TextField(
+          controller: tournamentTitleController,
           decoration: const InputDecoration(
             hintText: 'Title',
             prefixIcon: Icon(Icons.title),
@@ -149,9 +207,7 @@ class _TournamentFormState extends State<TournamentForm> {
         ),
         CreationTeamAdded(teams: teams),
         ElevatedButton(
-          onPressed: () {
-            print("Tournament created with teams: $teams");
-          },
+          onPressed: createTournamentClickAction,
           child: const Text("Create Tournament"),
         ),
       ],

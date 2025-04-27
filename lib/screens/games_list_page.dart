@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/dto/get_room_dto.dart';
+import 'package:sportsy_front/modules/services/auth.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/game_home_widget.dart';
 import '../modules/game_list_data.dart';
@@ -11,22 +13,40 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
+  
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+    @override
+  void initState() {
+    super.initState();
+    fetchRooms(); 
+  }
   String searchQuery = '';
 
 void onSearchChanged(String value) {
-    setState(() {
-      searchQuery = value;
-    });
+  setState(() {
+    searchQuery = value;
+  });
   }
+  List<GetRoomDto> roomsList = [];
+void fetchRooms() async {
+  try {
+    final rooms = await AuthService.getRooms();
+    setState(() {
+      roomsList = rooms;
+    });
+  } catch (e) {
+    print('Error: $e');
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
-    final filteredGames = gameData.where((game) {
-      return game.gameName.toLowerCase().contains(searchQuery.toLowerCase());
+    final filteredGames = roomsList.where((game) {
+      return game.name.toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
 
     return Scaffold(

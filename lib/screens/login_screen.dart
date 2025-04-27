@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
+import 'package:sportsy_front/screens/create_tournament_page.dart';
 import 'package:sportsy_front/screens/games_list_page.dart';
 import 'package:sportsy_front/screens/register_screen.dart';
 import '../modules/services/auth.dart';
@@ -37,7 +38,7 @@ class LoginScreenState extends State<LoginScreen> {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => MyHomePage(title: "Welcome"),
+                  builder: (context) => MyHomePage(title:"idk"),
                 ),
                 (Route<dynamic> route) => false,
               );
