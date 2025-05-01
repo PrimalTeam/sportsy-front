@@ -4,8 +4,7 @@ import 'package:sportsy_front/modules/services/auth.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/game_home_widget.dart';
 import '../modules/game_list_data.dart';
-
-
+import '../widgets/bottom_bar.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -13,65 +12,72 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-    @override
+  int _selectedIndex = 1; // Domyślnie aktywna zakładka
+
+  @override
   void initState() {
     super.initState();
-    fetchRooms(); 
+    fetchRooms();
   }
+
   String searchQuery = '';
 
-void onSearchChanged(String value) {
-  setState(() {
-    searchQuery = value;
-  });
-  }
-  List<GetRoomDto> roomsList = [];
-void fetchRooms() async {
-  try {
-    final rooms = await AuthService.getRooms();
+  void onSearchChanged(String value) {
     setState(() {
-      roomsList = rooms;
+      searchQuery = value;
     });
-  } catch (e) {
-    print('Error: $e');
   }
-}
 
+  List<GetRoomDto> roomsList = [];
+  void fetchRooms() async {
+    try {
+      final rooms = await AuthService.getRooms();
+      setState(() {
+        roomsList = rooms;
+      });
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+      if (index == 0) {
+        Navigator.pushNamed(context, '/homepage');
+      } else if (index == 1) {
+        Navigator.pushNamed(context, '/tournamentgames');
+      } else if (index == 2) {
+        Navigator.pushNamed(context, '/games');
+      } else if (index == 3) {
+        Navigator.pushNamed(context, '/profilepage');
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filteredGames = roomsList.where((game) {
-      return game.name.toLowerCase().contains(searchQuery.toLowerCase());
-    }).toList();
+    final filteredGames =
+        roomsList.where((game) {
+          return game.name.toLowerCase().contains(searchQuery.toLowerCase());
+        }).toList();
 
     return Scaffold(
-      appBar: MyAppBar(
-        title: 'Games list',
-      ),
+      appBar: MyAppBar(title: 'Games list'),
       body: ListView.builder(
         itemCount: filteredGames.length,
         itemBuilder: (context, index) {
           return GameHomeWidget(gameDetails: filteredGames[index]);
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.blue,
-        items: const [
-        
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_filled),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.sports_soccer),
-          label: 'Games',
-        ),
-      ]),
-      );
+      bottomNavigationBar: BottomBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
+    );
   }
 }

@@ -4,9 +4,8 @@ import 'package:sportsy_front/modules/tournament_services/tournament_info_struct
 import 'package:sportsy_front/widgets/app_bar.dart';
 import 'package:sportsy_front/widgets/bottom_app_bar.dart';
 
-
 class TournamentInfoPage extends StatefulWidget {
-  final TournamentInfo tournamentDetails; 
+  final TournamentInfo tournamentDetails;
 
   const TournamentInfoPage({super.key, required this.tournamentDetails});
 
@@ -14,15 +13,16 @@ class TournamentInfoPage extends StatefulWidget {
   State<TournamentInfoPage> createState() => _TournamentInfoPageState();
 }
 
-class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTickerProviderStateMixin {
+class _TournamentInfoPageState extends State<TournamentInfoPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -33,7 +33,10 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: MyAppBar(title: 'Tournament Info', appBarChild: buildBotomForAppBar( _tabController )),
+      appBar: MyAppBar(
+        title: 'Tournament Info',
+        appBarChild: buildBotomForAppBar(_tabController),
+      ),
       body: GestureDetector(
         onHorizontalDragEnd: (DragEndDetails details) {
           if (details.primaryVelocity! > 0) {
@@ -52,15 +55,12 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
           controller: _tabController,
           children: [
             _buildInfoTab(),
-            
+
             // WIDOK GIER
             Center(
-              child: Text(
-                'Widok gier',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: Text('Widok gier', style: TextStyle(color: Colors.white)),
             ),
-            
+
             // WIDOK DRABINEK
             Center(
               child: Text(
@@ -71,10 +71,9 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
           ],
         ),
       ),
-
     );
   }
-  
+
   Widget _buildInfoTab() {
     return Container(
       color: AppColors.background,
@@ -93,14 +92,13 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
             ),
             const SizedBox(height: 8.0),
             Text(
-              widget.tournamentDetails.title, //TRZEBA BEDZIE STWORZYC LISTE DLA TURNIEJOW TAK JAK JEST DLA GIER
-              style: TextStyle(
-                fontSize: 18.0,
-                color: AppColors.accent,
-              ),
+              widget
+                  .tournamentDetails
+                  .title, //TRZEBA BEDZIE STWORZYC LISTE DLA TURNIEJOW TAK JAK JEST DLA GIER
+              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
             const SizedBox(height: 24.0),
-            
+
             Text(
               'Description',
               style: TextStyle(
@@ -112,13 +110,10 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
             const SizedBox(height: 8.0),
             Text(
               widget.tournamentDetails.description.toString(),
-              style: TextStyle(
-                fontSize: 18.0,
-                color: AppColors.accent,
-              ),
+              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
             const SizedBox(height: 24.0),
-            
+
             Text(
               'Date Start',
               style: TextStyle(
@@ -130,13 +125,10 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
             const SizedBox(height: 8.0),
             Text(
               widget.tournamentDetails.dateStart.toString(),
-              style: TextStyle(
-                fontSize: 18.0,
-                color: AppColors.accent,
-              ),
+              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
             const SizedBox(height: 24.0),
-            
+
             Text(
               'Date End',
               style: TextStyle(
@@ -148,13 +140,10 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
             const SizedBox(height: 8.0),
             Text(
               widget.tournamentDetails.dateEnd.toString(),
-              style: TextStyle(
-                fontSize: 18.0,
-                color: AppColors.accent,
-              ),
+              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
             const SizedBox(height: 24.0),
-            
+
             Text(
               'Location',
               style: TextStyle(
@@ -166,13 +155,11 @@ class _TournamentInfoPageState extends State<TournamentInfoPage> with SingleTick
             const SizedBox(height: 8.0),
             Text(
               'Tu bedzie lokalizacja',
-              style: TextStyle(
-                fontSize: 18.0,
-                color: AppColors.accent,
-              ),
+              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
-        ],
+          ],
+        ),
       ),
-    ));
+    );
   }
 }

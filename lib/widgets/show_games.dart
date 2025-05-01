@@ -14,29 +14,29 @@ class ShowGames extends StatefulWidget {
 class _ShowGamesState extends State<ShowGames> {
   @override
   Widget build(BuildContext context) {
-    return 
-    
-    Column(
+    return Column(
       children: [
-        for(var team in widget.teamsList)
-        Container(
-          height: 100,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(100),
+        for (var team in widget.teamsList)
+          Container(
+            height: 100,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Image(image: AssetImage('lib/assets/logo.png')),
+                ),
+                Text('${team.name} vs ${team.name}'),
+
+                Expanded(
+                  child: Image(image: AssetImage('lib/assets/logo.png')),
+                ),
+              ],
+            ),
           ),
-          child: Row(
-            
-            children: [
-              Expanded(child: Image(image: AssetImage('lib/assets/logo.png'),)),
-              Text('${team.name} vs ${team.name}',),
-        
-              Expanded(child: Image(image: AssetImage('lib/assets/logo.png'),)),
-            
-            ],
-          ),
-        ),
       ],
     );
   }

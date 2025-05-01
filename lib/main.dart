@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
+import 'package:sportsy_front/screens/home_page.dart';
 import 'package:sportsy_front/screens/tournament_games_page.dart';
 import 'package:sportsy_front/screens/tournament_info.dart';
 import 'screens/games_list_page.dart';
 import 'screens/login_screen.dart';
 import 'screens/create_tournament_page.dart';
+import 'screens/profile_page.dart';
+import 'screens/game_page.dart';
+import 'screens/team_page.dart';
+import 'screens/team_user.dart';
+import 'screens/team_status.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -25,12 +31,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/login',
       theme: ThemeData(
-        
-
-        iconTheme: IconThemeData(
-          color: AppColors.accent,
-        ),
-        scaffoldBackgroundColor: const Color.fromARGB(255, 0,0,0,),
+        iconTheme: IconThemeData(color: AppColors.accent),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 0, 0, 0),
 
         textTheme: GoogleFonts.poppinsTextTheme().apply(
           bodyColor: Colors.white,
@@ -79,20 +81,31 @@ class MyApp extends StatelessWidget {
             backgroundColor: AppColors.primary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(100),
-              side: const BorderSide(
-                color: AppColors.accent,
-                width: 2,
-              ),
+              side: const BorderSide(color: AppColors.accent, width: 2),
             ),
           ),
         ),
       ),
       routes: {
-        '/cinfopage': (context) => TournamentInfoPage(tournamentDetails: TournamentInfo(title: "tytuł", description: "opis", dateStart: DateTime.now(), dateEnd: DateTime.now())),
+        '/cinfopage':
+            (context) => TournamentInfoPage(
+              tournamentDetails: TournamentInfo(
+                title: "tytuł",
+                description: "opis",
+                dateStart: DateTime.now(),
+                dateEnd: DateTime.now(),
+              ),
+            ),
         '/tournamentgames': (context) => const TournamentGamesPage(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const MyHomePage(title: "Title"),
         '/ctournament': (context) => const CreateTournamentPage(),
+        '/homepage': (context) => const HomePage(),
+        '/profilepage': (context) => const ProfilePage(),
+        '/gamepage': (context) => const GamePage(gameDetails: 1),
+        '/teampage': (context) => const TeamPage(),
+        '/teamuser': (context) => const TeamUser(),
+        '/teamstatus': (context) => const TeamStatus(),
       },
     );
   }
