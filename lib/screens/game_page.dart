@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
+import 'package:sportsy_front/screens/room_users_page.dart';
+import 'package:sportsy_front/screens/tournament_info.dart';
 
 import 'package:sportsy_front/widgets/app_bar.dart';
 
 
 
 class GamePage extends StatelessWidget {
-  final dynamic gameDetails; // Accept game details as an argument
+  final dynamic gameDetails; 
 
   const GamePage({super.key, required this.gameDetails});
 
@@ -14,14 +17,48 @@ class GamePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     appBar: MyAppBar(title: gameDetails.gameName),
+     appBar: MyAppBar(title: gameDetails.name),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Game Name: ${gameDetails.gameName}'),
-            Text('Sport Type: ${gameDetails.sportType}'),
-            Text('Is Host: ${gameDetails.isHost}'),
+              Column(children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TournamentInfoPage(
+                        tournamentDetails: TournamentInfo(
+                          title: "tytuł",
+                          description: "opis",
+                          dateStart: DateTime.now(),
+                          dateEnd: DateTime.now(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                child: Text("Tournament Informations"),
+              ),
+                
+            Text('Game Name: ${gameDetails.name}'),
+            Text('Sport Type: ${gameDetails.name}'),
+            Text('Is Host: ${gameDetails.role}'),
+            ElevatedButton(
+              onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                builder: (context) => RoomUsersPage(roomId: gameDetails.id, role: gameDetails.role),
+                ),
+              );
+              },
+              child: Text("USERS"),
+            )
+            ]
+            )
+            
           ],
         ),
       ),

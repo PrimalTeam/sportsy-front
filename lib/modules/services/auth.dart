@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:sportsy_front/dto/add_user_to_room_dto.dart';
 import 'package:sportsy_front/dto/create_room_dto.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
+import 'package:sportsy_front/dto/get_room_users_dto.dart';
 import 'package:sportsy_front/modules/services/auth_interceptor.dart';
 import 'api.dart';
 import 'jwt_logic.dart';
@@ -90,4 +92,37 @@ class AuthService extends Interceptor {
     throw Exception('Failed to fetch rooms: ${e.response?.data}');
   }
 }
+
+static Future<List<GetRoomUsersDto>> getRoomUsers(int roomId) async {
+  try {
+    final response = await _dio.get('/room/users/$roomId');
+
+    print(response.data.runtimeType);
+    print(response.data);
+
+    final data = response.data as List;
+
+    return data.map((user) =>
+      GetRoomUsersDto.fromJson(user as Map<String, dynamic>)
+    ).toList();
+  } on DioException catch (e) {
+    print("Error fetching room users: ${e.response?.data}");
+    throw Exception('Failed to fetch room users: ${e.response?.data}');
+  }
+}
+  static Future<Response> addUserToRoom(AddUserToRoomDto addUserToRoomDto, roomId) async {
+    try {
+      final Map<String, dynamic> data = addUserToRoomDto.toJson();
+      final response = await _dio.post(
+        '/roomUser/addUser/$roomId',
+        data: data,
+      );
+      return response;
+    } on DioException catch (e) {
+      print("Error during adding User, please try again!: ${e.response?.data}");
+      throw Exception('Failed to add User to Room: ${e.response?.data}');
+    }
+  }
+
+
 }

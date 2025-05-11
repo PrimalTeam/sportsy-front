@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/widgets/app_bar.dart';
 import '../modules/services/jwt_logic.dart';
 import '../modules/services/auth.dart';
 
@@ -8,8 +9,8 @@ class ProfileJwtTestScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
+      appBar: MyAppBar(
+        title: 'Profile',
       ),
       body: Center(
         child: Column(
@@ -49,7 +50,7 @@ class ProfileJwtTestScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  final response = await AuthService.test(); // Perform GET request
+                  final response = await AuthService.test(); 
                   final profileData = response.data;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Profile: ${profileData.toString()}')),

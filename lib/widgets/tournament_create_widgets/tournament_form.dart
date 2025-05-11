@@ -30,6 +30,7 @@ void createTournamentClickAction() async {
 try{
   await AuthService.createRoom(roomDto);
     print("Tournament Created!");
+    Navigator.pop(context);
   }
   catch (e) {
     print("An error occurred while creating the tournament: $e");

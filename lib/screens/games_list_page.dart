@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
 import 'package:sportsy_front/modules/services/auth.dart';
+import 'package:sportsy_front/screens/create_tournament_page.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/game_home_widget.dart';
-import '../modules/game_list_data.dart';
 import '../widgets/bottom_bar.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -51,10 +51,6 @@ class _MyHomePageState extends State<MyHomePage> {
         Navigator.pushNamed(context, '/homepage');
       } else if (index == 1) {
         Navigator.pushNamed(context, '/tournamentgames');
-      } else if (index == 2) {
-        Navigator.pushNamed(context, '/games');
-      } else if (index == 3) {
-        Navigator.pushNamed(context, '/profilepage');
       }
     });
   }
@@ -78,6 +74,11 @@ class _MyHomePageState extends State<MyHomePage> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
+      floatingActionButton: FloatingActionButton(onPressed: (){
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => CreateTournamentPage(),));
+      },child: Icon(Icons.add), 
+      ),
+
     );
   }
 }

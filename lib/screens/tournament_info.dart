@@ -71,6 +71,14 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Akcja po kliknięciu przycisku
+          print("FloatingActionButton clicked!");
+        },
+        backgroundColor: AppColors.accent, // Kolor tła przycisku
+        child: const Icon(Icons.edit), // Ikona przycisku
+      ),
     );
   }
 

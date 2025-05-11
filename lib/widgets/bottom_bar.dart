@@ -21,7 +21,6 @@ class BottomBar extends StatelessWidget {
           icon: Icon(Icons.emoji_events),
           label: 'Tournaments',
         ),
-        BottomNavigationBarItem(icon: Icon(Icons.meeting_room), label: 'Rooms'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );

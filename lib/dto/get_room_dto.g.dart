@@ -10,6 +10,7 @@ GetRoomDto _$GetRoomDtoFromJson(Map<String, dynamic> json) => GetRoomDto(
   json['icon'] as String?,
   id: (json['id'] as num).toInt(),
   name: json['name'] as String,
+  role: json['role'] as String,
 );
 
 Map<String, dynamic> _$GetRoomDtoToJson(GetRoomDto instance) =>
@@ -17,4 +18,5 @@ Map<String, dynamic> _$GetRoomDtoToJson(GetRoomDto instance) =>
       'id': instance.id,
       'name': instance.name,
       'icon': instance.icon,
+      'role': instance.role,
     };

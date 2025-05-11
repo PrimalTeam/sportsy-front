@@ -8,8 +8,7 @@ import 'package:sportsy_front/screens/tournament_info.dart';
 import 'screens/games_list_page.dart';
 import 'screens/login_screen.dart';
 import 'screens/create_tournament_page.dart';
-import 'screens/profile_page.dart';
-import 'screens/game_page.dart';
+
 import 'screens/team_page.dart';
 import 'screens/team_user.dart';
 import 'screens/team_status.dart';
@@ -31,6 +30,10 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/login',
       theme: ThemeData(
+        appBarTheme: AppBarTheme(
+          iconTheme: IconThemeData(color: AppColors.accent),
+        ),
+
         iconTheme: IconThemeData(color: AppColors.accent),
         scaffoldBackgroundColor: const Color.fromARGB(255, 0, 0, 0),
 
@@ -101,8 +104,6 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const MyHomePage(title: "Title"),
         '/ctournament': (context) => const CreateTournamentPage(),
         '/homepage': (context) => const HomePage(),
-        '/profilepage': (context) => const ProfilePage(),
-        '/gamepage': (context) => const GamePage(gameDetails: 1),
         '/teampage': (context) => const TeamPage(),
         '/teamuser': (context) => const TeamUser(),
         '/teamstatus': (context) => const TeamStatus(),

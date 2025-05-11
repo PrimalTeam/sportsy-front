@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
-import 'package:sportsy_front/modules/game_list_struct.dart';
 import 'package:sportsy_front/screens/game_page.dart';
 
 class GameHomeWidget extends StatelessWidget {
@@ -17,11 +17,11 @@ class GameHomeWidget extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        //border:
-            //gameDetails.role == "host"
-            //  ? Border.all(color: Colors.white, width: 3)
-            //  : null,
-        color: Color(0xff283963),
+        border:
+            gameDetails.role == "admin"
+             ? Border.all(color: Colors.white, width: 3)
+             : null,
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(100),
       ),
       child: Row(
@@ -54,7 +54,8 @@ class GameHomeWidget extends StatelessWidget {
                 context: context,
                 builder: (BuildContext context) {
                   return Container(
-                    height: 200,
+                    height: 250,
+                    color: AppColors.primary,
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -68,8 +69,15 @@ class GameHomeWidget extends StatelessWidget {
                         ),
                         Text("You participate in this game"),
                         ListTile(
-                          leading: Icon(Icons.exit_to_app, color: Colors.red),
-                          title: Text('Exit game'),
+                          leading: Icon(Icons.exit_to_app, color: AppColors.accent),
+                          title: Text('Exit game', style: TextStyle(color: Colors.red),),
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                        ListTile(
+                          leading: Icon(Icons.edit, color: AppColors.accent),
+                          title: Text('Edit', style: TextStyle(color: Colors.white,)),
                           onTap: () {
                             Navigator.pop(context);
                           },
