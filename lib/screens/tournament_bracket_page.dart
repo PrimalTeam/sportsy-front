@@ -38,7 +38,7 @@ class TournamentBracketPage extends StatelessWidget {
                         child: Text(
                           bracket[roundIndex][matchIndex],
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 14, color: Colors.black),
                         ),
                       ),
                     ),

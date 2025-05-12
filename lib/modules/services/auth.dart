@@ -3,6 +3,7 @@ import 'package:sportsy_front/dto/add_user_to_room_dto.dart';
 import 'package:sportsy_front/dto/create_room_dto.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
 import 'package:sportsy_front/dto/get_room_users_dto.dart';
+import 'package:sportsy_front/dto/get_teams_dto.dart';
 import 'package:sportsy_front/dto/get_tournament_dto.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
 import 'package:sportsy_front/dto/team_add_dto.dart';
@@ -171,6 +172,30 @@ static Future<Response> addTeam(TeamAddDto teamAddDto, int roomId) async {
   } on DioException catch (e) {
     print("Error adding team: ${e.response?.data}"); 
     throw Exception('Failed to add team: ${e.response?.data}'); 
+  }
+}
+
+static Future<List<GetTeamsDto>> getTeamsOfTournament(dynamic tournamentId) async {
+  try {
+    final response = await _dio.get('/team/getByTournament/$tournamentId');
+    if (response.statusCode == 200) {
+      // Check if the response is wrapped in an object
+      final data = response.data;
+      if (data is Map<String, dynamic> && data.containsKey('teams')) {
+        final List<dynamic> teams = data['teams'] as List<dynamic>;
+        return teams.map((team) => GetTeamsDto.fromJson(team as Map<String, dynamic>)).toList();
+      } else if (data is List<dynamic>) {
+        // If the response is already a list
+        return data.map((team) => GetTeamsDto.fromJson(team as Map<String, dynamic>)).toList();
+      } else {
+        throw Exception('Unexpected response format');
+      }
+    } else {
+      throw Exception('Failed to load teams');
+    }
+  } on DioException catch (e) {
+    print('Error fetching teams of tournament: ${e.response?.data}');
+    throw Exception('Failed to fetch teams of tournament: ${e.response?.data}');
   }
 }
 }

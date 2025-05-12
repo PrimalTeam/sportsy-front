@@ -5,6 +5,8 @@ import 'package:sportsy_front/dto/auth_dto.dart';
 import 'package:sportsy_front/screens/games_list_page.dart';
 import 'package:sportsy_front/screens/register_screen.dart';
 import 'package:sportsy_front/screens/team_page.dart';
+import 'package:sportsy_front/screens/teams_show_page.dart';
+import 'package:sportsy_front/screens/tournament_bracket_page.dart';
 import '../modules/services/auth.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -38,7 +40,7 @@ class LoginScreenState extends State<LoginScreen> {
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
-                  //builder: (context) => TeamPage(),
+                  //builder: (context) => TeamsShowPage(),
                   builder: (context) => MyHomePage(title: "homePage",),
                 ),
                 (Route<dynamic> route) => false,
