@@ -24,7 +24,7 @@ class RoomUsersPage extends StatelessWidget {
           if(role == "admin")
           Center(
             child: ElevatedButton(
-              onPressed: () {addUserToRoomWidget(context: context, roomId:  roomId);},
+              onPressed: () {addUserToRoomWidget(context: context, roomId:  roomId, );},
               child: Text("Add new Users"),
             ),
           ),

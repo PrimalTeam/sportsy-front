@@ -90,15 +90,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
       routes: {
-        '/cinfopage':
-            (context) => TournamentInfoPage(
-              tournamentDetails: TournamentInfo(
-                title: "tytuł",
-                description: "opis",
-                dateStart: DateTime.now(),
-                dateEnd: DateTime.now(),
-              ),
-            ),
         '/tournamentgames': (context) => const TournamentGamesPage(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const MyHomePage(title: "Title"),

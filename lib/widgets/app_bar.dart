@@ -53,19 +53,19 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
                 const Spacer(),
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.settings, color: Colors.white),
-                    onPressed: () {
-                      JwtStorageService.clearTokens();
-                    },
-                  ),
-                ),
+                // Container(
+                //   width: 40,
+                //   height: 40,
+                //   decoration: const BoxDecoration(
+                //     shape: BoxShape.circle,
+                //   ),
+                //   child: IconButton(
+                //     icon: const Icon(Icons.settings, color: Colors.white),
+                //     onPressed: () {
+                //       JwtStorageService.clearTokens();
+                //     },
+                //   ),
+                // ),
               ],
             ),
             if (appBarChild != null) ...[

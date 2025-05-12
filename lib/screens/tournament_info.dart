@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
+import 'package:sportsy_front/modules/services/auth.dart';
 import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
 import 'package:sportsy_front/widgets/bottom_app_bar.dart';
+import 'package:sportsy_front/dto/room_info_dto.dart';
 
 class TournamentInfoPage extends StatefulWidget {
-  final TournamentInfo tournamentDetails;
 
-  const TournamentInfoPage({super.key, required this.tournamentDetails});
+  const TournamentInfoPage({super.key, required this.roomId});
+  final int roomId;
 
   @override
   State<TournamentInfoPage> createState() => _TournamentInfoPageState();
@@ -16,12 +18,31 @@ class TournamentInfoPage extends StatefulWidget {
 class _TournamentInfoPageState extends State<TournamentInfoPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  RoomInfoDto? _roomInfo;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _initializeData();
   }
+
+Future<void> _initializeData() async {
+  try {
+    final roomInfo = await AuthService.getRoomInfo(widget.roomId);
+    print(roomInfo);
+    setState(() {
+      _roomInfo = roomInfo;
+      _isLoading = false;
+    });
+  } catch (e) {
+    print("Error fetching room info: $e");
+    setState(() {
+      _isLoading = false;
+    });
+  }
+}
 
   @override
   void dispose() {
@@ -37,52 +58,58 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
         title: 'Tournament Info',
         appBarChild: buildBotomForAppBar(_tabController),
       ),
-      body: GestureDetector(
-        onHorizontalDragEnd: (DragEndDetails details) {
-          if (details.primaryVelocity! > 0) {
-            // Swiped right
-            if (_tabController.index > 0) {
-              _tabController.animateTo(_tabController.index - 1);
-            }
-          } else if (details.primaryVelocity! < 0) {
-            // Swiped left
-            if (_tabController.index < 2) {
-              _tabController.animateTo(_tabController.index + 1);
-            }
-          }
-        },
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildInfoTab(),
-
-            // WIDOK GIER
-            Center(
-              child: Text('Widok gier', style: TextStyle(color: Colors.white)),
-            ),
-
-            // WIDOK DRABINEK
-            Center(
-              child: Text(
-                'Widok drabinki',
-                style: TextStyle(color: Colors.white),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : GestureDetector(
+              onHorizontalDragEnd: (DragEndDetails details) {
+                if (details.primaryVelocity! > 0) {
+                  if (_tabController.index > 0) {
+                    _tabController.animateTo(_tabController.index - 1);
+                  }
+                } else if (details.primaryVelocity! < 0) {
+                  if (_tabController.index < 2) {
+                    _tabController.animateTo(_tabController.index + 1);
+                  }
+                }
+              },
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildInfoTab(),
+                  Center(
+                    child: Text('Widok gier', style: TextStyle(color: Colors.white)),
+                  ),
+                  Center(
+                    child: Text(
+                      'Widok drabinki',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Akcja po kliknięciu przycisku
           print("FloatingActionButton clicked!");
         },
-        backgroundColor: AppColors.accent, // Kolor tła przycisku
-        child: const Icon(Icons.edit), // Ikona przycisku
+        backgroundColor: AppColors.accent,
+        child: const Icon(Icons.edit),
       ),
     );
   }
 
   Widget _buildInfoTab() {
+    if (_roomInfo == null) {
+      return Center(
+        child: Text(
+          'No data available',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
+    final tournament = _roomInfo!.tournament;
+
     return Container(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -100,9 +127,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
             ),
             const SizedBox(height: 8.0),
             Text(
-              widget
-                  .tournamentDetails
-                  .title, //TRZEBA BEDZIE STWORZYC LISTE DLA TURNIEJOW TAK JAK JEST DLA GIER
+              tournament!.info.title,
               style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
             const SizedBox(height: 24.0),
@@ -117,7 +142,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
             ),
             const SizedBox(height: 8.0),
             Text(
-              widget.tournamentDetails.description.toString(),
+              tournament!.info.description,
               style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
             const SizedBox(height: 24.0),
@@ -132,7 +157,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
             ),
             const SizedBox(height: 8.0),
             Text(
-              widget.tournamentDetails.dateStart.toString(),
+              tournament.info.dateStart.toString(),
               style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
             const SizedBox(height: 24.0),
@@ -147,22 +172,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
             ),
             const SizedBox(height: 8.0),
             Text(
-              widget.tournamentDetails.dateEnd.toString(),
-              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
-            ),
-            const SizedBox(height: 24.0),
-
-            Text(
-              'Location',
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              'Tu bedzie lokalizacja',
+              tournament.info.dateEnd.toString(),
               style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
           ],

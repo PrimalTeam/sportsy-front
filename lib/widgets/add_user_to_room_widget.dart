@@ -4,16 +4,18 @@ import 'package:sportsy_front/dto/add_user_to_room_dto.dart';
 import 'package:sportsy_front/dto/room_user_role_enum.dart';
 import 'package:sportsy_front/modules/services/auth.dart';
 
+
 Future<void> addUserToRoomWidget({
   required BuildContext context,
   required int roomId,
-
 
 }) {
   final TextEditingController emailTextController = TextEditingController();
     String selectedRole = "";
   void addUserToRoom(){
     AuthService.addUserToRoom(AddUserToRoomDto(role: selectedRole, identifier: emailTextController.text, identifierType: 'email'), roomId);
+    Navigator.pop(context);
+
   }
   return showModalBottomSheet(
     context: context,
@@ -83,6 +85,7 @@ builder: (context) => StatefulBuilder(
                 SizedBox(height: 10,), 
 
                 ElevatedButton(onPressed: addUserToRoom, child: Text("Add User to the Room")),
+                
                 
                 SizedBox(height: 20),
               ],

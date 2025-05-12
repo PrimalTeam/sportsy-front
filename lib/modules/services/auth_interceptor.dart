@@ -19,50 +19,50 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      bool success = await _refreshToken();
-       await JwtStorageService.clearTokens();
-        navigatorKey.currentState?.pushNamedAndRemoveUntil(
-          '/login',
-          (route) => false,
-        );
-      if (success) {
-        String? newToken = await JwtStorageService.getToken();
-        err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-        return handler.resolve(await AuthService.dio.fetch(err.requestOptions));
-      } else {
-        await JwtStorageService.clearTokens();
-        navigatorKey.currentState?.pushNamedAndRemoveUntil(
-          '/login',
-          (route) => false,
-        );
-      }
-    }
+if (err.response?.statusCode == 401) {
+  bool success = await _refreshToken();
+  if (success) {
+    String? newToken = await JwtStorageService.getToken();
+    err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+    return handler.resolve(await AuthService.dio.fetch(err.requestOptions));
+  } else {
+    await JwtStorageService.clearTokens();
+    navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      '/login',
+      (route) => false,
+    );
+  }
+}
     handler.next(err);
   }
 
-  Future<bool> _refreshToken() async {
-    try {
-      String? refreshToken = await JwtStorageService.getRefreshToken();
-      if (refreshToken == null || refreshToken.isEmpty) return false;
+Future<bool> _refreshToken() async {
+  try {
+    String? refreshToken = await JwtStorageService.getRefreshToken();
+    print('Refresh Token: $refreshToken');
+    if (refreshToken == null || refreshToken.isEmpty) return false;
 
-      Response response = await AuthService.dio.post(
-        '/refresh',
-        data: {'refresh_token': refreshToken},
-      );
+    Response response = await AuthService.dio.post(
+      '/auth/refresh/$refreshToken',
+    );
 
-      if (response.statusCode == 200) {
-        String newAccessToken = response.data['access_token'];
-        String newRefreshToken = response.data['refresh_token'];
+    print('Refresh Response: ${response.data}');
 
-        await JwtStorageService.storeToken(newAccessToken);
-        await JwtStorageService.storeRefreshToken(newRefreshToken);
+    if (response.statusCode == 200) {
+      String newAccessToken = response.data['access_token'];
+      String newRefreshToken = response.data['refresh_token'];
 
-        return true;
-      }
-    } catch (e) {
-      print('Refresh token failed: $e');
+      await JwtStorageService.storeToken(newAccessToken);
+      await JwtStorageService.storeRefreshToken(newRefreshToken);
+
+      print('New Access Token: $newAccessToken');
+      print('New Refresh Token: $newRefreshToken');
+
+      return true;
     }
-    return false;
+  } catch (e) {
+    print('Refresh token failed: $e');
   }
+  return false;
+}
 }

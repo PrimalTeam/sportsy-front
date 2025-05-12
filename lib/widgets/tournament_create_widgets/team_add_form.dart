@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sportsy_front/dto/team_add_dto.dart';
+import 'package:sportsy_front/modules/services/auth.dart';
 
 class TeamAddForm extends StatefulWidget {
   final void Function(String name, File? logo) onTeamAdded;
@@ -25,7 +28,8 @@ class _TeamAddFormState extends State<TeamAddForm> {
     }
   }
 
-  void _submit() {
+  void _submit() async {
+    
     widget.onTeamAdded(_nameController.text, _image);
     _nameController.clear();
     setState(() {

@@ -29,12 +29,7 @@ class GamePage extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => TournamentInfoPage(
-                        tournamentDetails: TournamentInfo(
-                          title: "tytuł",
-                          description: "opis",
-                          dateStart: DateTime.now(),
-                          dateEnd: DateTime.now(),
-                        ),
+                        roomId: gameDetails.id,
                       ),
                     ),
                   );

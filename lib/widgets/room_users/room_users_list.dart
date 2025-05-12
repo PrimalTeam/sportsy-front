@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/get_room_users_dto.dart';
 import 'package:sportsy_front/modules/services/auth.dart';
 
@@ -34,13 +35,25 @@ class _RoomUsersListState extends State<RoomUsersList> {
             itemBuilder: (context, index) {
               final user = snapshot.data![index];
               return ListTile(
-                title: Text(user.username),
-                subtitle: Text('ID: ${user.id}, Email: ${user.email}'),
+                title: Text(user.user.username, style: TextStyle(color: AppColors.secondary,)),
+                subtitle: Row(
+                  children: [
+                    Text('ID: ${user.id}, Email: ${user.user.email}',style: TextStyle(color: Colors.white), ),
+                    IconButton(onPressed: (){
+                      AuthService.deleteUser(widget.roomId, user.id);
+                            setState(() {
+        roomUsers = AuthService.getRoomUsers(widget.roomId); 
+      });
+                    }, icon: Icon(Icons.delete), color: AppColors.warning,),
+                  ],
+                ),
+                
               );
+
             },
           );
         } else {
-          return const Text('No users found.');
+          return const Text('No users found.',style: TextStyle(color: Colors.white,));
         }
       },
     );
