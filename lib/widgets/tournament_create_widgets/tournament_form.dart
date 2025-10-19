@@ -7,13 +7,13 @@ import 'package:sportsy_front/dto/create_room_dto.dart';
 import 'package:sportsy_front/dto/team_add_dto.dart';
 import 'package:sportsy_front/dto/tournament_dto.dart';
 import 'package:sportsy_front/modules/services/auth.dart';
-import 'package:sportsy_front/modules/tournament_services/creation_team_list.dart';
 import 'package:sportsy_front/modules/tournament_services/sport_type_enum.dart';
 import 'package:sportsy_front/widgets/custom_main_bottom_modal_window.dart';
 import 'package:sportsy_front/widgets/tournament_create_widgets/creation_team_added.dart';
 
 class TournamentForm extends StatefulWidget {
-  const TournamentForm({super.key});
+  final VoidCallback fetchRooms;
+  const TournamentForm({super.key, required this.fetchRooms});
 
 
   @override
@@ -28,6 +28,7 @@ class _TournamentFormState extends State<TournamentForm> {
   String tournamentEndDateController = "";
   List<GamesDto> games = [GamesDto("PENDING")];
   void createTournamentClickAction() async {
+    
     if (tournamentTitleController.text != "") {
       final roomDto = CreateRoomDto(
         tournamentTitleController.text,
@@ -50,13 +51,14 @@ class _TournamentFormState extends State<TournamentForm> {
         print("Generated JSON: ${roomDto.toJson()}");
         await AuthService.createRoom(roomDto);
         print("Tournament Created!");
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } catch (e) {
         print("An error occurred while creating the tournament: $e");
       }
     } else {
       _showMyDialog();
     }
+    widget.fetchRooms();
   }
 
   Future<void> _showMyDialog() async {

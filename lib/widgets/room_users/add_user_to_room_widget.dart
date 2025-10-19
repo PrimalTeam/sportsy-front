@@ -6,14 +6,24 @@ import 'package:sportsy_front/modules/services/auth.dart';
 
 
 Future<void> addUserToRoomWidget({
+
   required BuildContext context,
   required int roomId,
-
+  required VoidCallback onUserAdded,
 }) {
   final TextEditingController emailTextController = TextEditingController();
-    String selectedRole = "";
-  void addUserToRoom(){
-    AuthService.addUserToRoom(AddUserToRoomDto(role: selectedRole, identifier: emailTextController.text, identifierType: 'email'), roomId);
+  String selectedRole = "";
+  void addUserToRoom() {
+    AuthService.addUserToRoom(
+      AddUserToRoomDto(
+        role: selectedRole,
+        identifier: emailTextController.text,
+        identifierType: 'email',
+      ),
+      roomId,
+    ).then((_) {
+      onUserAdded();
+    });
     Navigator.pop(context);
 
   }

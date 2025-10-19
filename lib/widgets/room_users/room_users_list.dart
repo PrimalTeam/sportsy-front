@@ -5,18 +5,24 @@ import 'package:sportsy_front/modules/services/auth.dart';
 
 class RoomUsersList extends StatefulWidget {
   const RoomUsersList({super.key, required this.roomId});
-    final int roomId;
+  final int roomId;
 
   @override
-  State<RoomUsersList> createState() => _RoomUsersListState();
+  State<RoomUsersList> createState() => RoomUsersListState();
 }
 
-class _RoomUsersListState extends State<RoomUsersList> {
+class RoomUsersListState extends State<RoomUsersList> {
   late Future<List<GetRoomUsersDto>> roomUsers;
   @override
   void initState() {
     super.initState();
-    roomUsers = AuthService.getRoomUsers(widget.roomId);
+    refreshUsers();
+  }
+
+  Future<void> refreshUsers() async {
+    setState(() {
+      roomUsers = AuthService.getRoomUsers(widget.roomId);
+    });
   }
 
   @override
@@ -35,25 +41,36 @@ class _RoomUsersListState extends State<RoomUsersList> {
             itemBuilder: (context, index) {
               final user = snapshot.data![index];
               return ListTile(
-                title: Text(user.user.username, style: TextStyle(color: AppColors.secondary,)),
+                title: Text(
+                  user.user.username,
+                  style: TextStyle(color: AppColors.secondary),
+                ),
                 subtitle: Row(
                   children: [
-                    Text('ID: ${user.id}, Email: ${user.user.email}',style: TextStyle(color: Colors.white), ),
-                    IconButton(onPressed: (){
-                      AuthService.deleteUser(widget.roomId, user.id);
-                            setState(() {
-        roomUsers = AuthService.getRoomUsers(widget.roomId); 
-      });
-                    }, icon: Icon(Icons.delete), color: AppColors.warning,),
+                    Text(
+                      'ID: ${user.id}, Email: ${user.user.email}',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        AuthService.deleteUser(widget.roomId, user.id);
+                        setState(() {
+                          roomUsers = AuthService.getRoomUsers(widget.roomId);
+                        });
+                      },
+                      icon: Icon(Icons.delete),
+                      color: AppColors.warning,
+                    ),
                   ],
                 ),
-                
               );
-
             },
           );
         } else {
-          return const Text('No users found.',style: TextStyle(color: Colors.white,));
+          return const Text(
+            'No users found.',
+            style: TextStyle(color: Colors.white),
+          );
         }
       },
     );

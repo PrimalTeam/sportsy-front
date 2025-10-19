@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/modules/services/auth.dart';
 import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
+import 'package:sportsy_front/screens/room_users_page.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
 import 'package:sportsy_front/widgets/bottom_app_bar.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
@@ -87,17 +88,22 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
                       ),
                     ),
                     Center(
-                      child: Text(
-                        'Widok użytkowników',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: RoomUsersPage(roomId: widget.roomId, role: role)
                     ),
                   ],
                 ),
               ),
       bottomNavigationBar: Material(
         color: Colors.black,
-        child: buildBottomTabBar(context, _tabController, widget.roomId, role),
+        child: buildBottomTabBar(
+          context: context,
+          tabController: _tabController,
+          onTabSelected: (index) {
+
+              _tabController.animateTo(index);
+            
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

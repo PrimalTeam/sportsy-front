@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sportsy_front/dto/team_add_dto.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
+
 
 class TeamAddForm extends StatefulWidget {
   final void Function(String name, File? logo) onTeamAdded;
@@ -15,6 +15,7 @@ class TeamAddForm extends StatefulWidget {
 }
 
 class _TeamAddFormState extends State<TeamAddForm> {
+  static const String _defaultAsset = 'lib/assets/logo.png';
   final _nameController = TextEditingController();
   File? _image;
   final picker = ImagePicker();
@@ -28,9 +29,21 @@ class _TeamAddFormState extends State<TeamAddForm> {
     }
   }
 
+  Future<File> _assetToTempFile(String assetPath, String fileName) async {
+    final bytes = await rootBundle.load(assetPath);
+    final buffer = bytes.buffer;
+    final tempDir = Directory.systemTemp;
+    final file = File('${tempDir.path}/$fileName');
+    await file.writeAsBytes(
+      buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
+      flush: true,
+    );
+    return file;
+  }
   void _submit() async {
-    
-    widget.onTeamAdded(_nameController.text, _image);
+
+    widget.onTeamAdded(_nameController.text, _image?? await _assetToTempFile(_defaultAsset, 'logo.png'));
+
     _nameController.clear();
     setState(() {
       _image = null;

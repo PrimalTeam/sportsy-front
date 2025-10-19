@@ -40,7 +40,7 @@ Widget build(BuildContext context) {
     appBar: AppBar(
       title: const MyAppBar(title: "Teams"),
     ),
-    body: SizedBox.expand( // Ensures the body takes up all available space
+    body: SizedBox.expand(
       child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _teams.isEmpty

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
 import 'package:sportsy_front/modules/services/auth.dart';
-import 'package:sportsy_front/screens/create_tournament_page.dart';
+import 'package:sportsy_front/screens/create_tournament_screen.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/game_home_widget.dart';
 import '../widgets/bottom_bar.dart';
@@ -16,7 +16,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _selectedIndex = 1; // Domyślnie aktywna zakładka
+  int _selectedIndex = 1;
 
   @override
   void initState() {
@@ -33,25 +33,22 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   List<GetRoomDto> roomsList = [];
-  void fetchRooms() async {
+ Future<void> fetchRooms() async { // zmieniono: Future<void>
     try {
       final rooms = await AuthService.getRooms();
+      if (!mounted) return;
       setState(() {
-        roomsList = rooms;
+        // nowa instancja listy, żeby na pewno zainicjować rebuild
+        roomsList = List<GetRoomDto>.from(rooms);
       });
     } catch (e) {
-      print('Error: $e');
+      debugPrint('Error: $e');
     }
   }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      if (index == 0) {
-        Navigator.pushNamed(context, '/homepage');
-      } else if (index == 1) {
-        Navigator.pushNamed(context, '/tournamentgames');
-      }
     });
   }
 
@@ -75,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onTap: _onItemTapped,
       ),
       floatingActionButton: FloatingActionButton(onPressed: (){
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) => CreateTournamentPage(),));
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => CreateTournamentPage(fetchRooms: fetchRooms),));
       },child: Icon(Icons.add), 
       ),
 

@@ -2,11 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
-import 'package:sportsy_front/screens/games_list_page.dart';
+import 'package:sportsy_front/screens/tournaments_screen.dart';
 import 'package:sportsy_front/screens/register_screen.dart';
-import 'package:sportsy_front/screens/team_page.dart';
-import 'package:sportsy_front/screens/teams_show_page.dart';
-import 'package:sportsy_front/screens/tournament_bracket_page.dart';
 import '../modules/services/auth.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 

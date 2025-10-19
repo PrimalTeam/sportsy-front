@@ -55,7 +55,6 @@ class AuthService extends Interceptor {
       );
       return response;
     } on DioException catch (e) {
-      print("Registration error: ${e.response?.data}");
       throw Exception('Failed to register: ${e.response?.data}');
     }
   }

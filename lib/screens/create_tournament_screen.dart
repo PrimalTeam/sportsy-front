@@ -3,7 +3,8 @@ import 'package:sportsy_front/widgets/app_bar.dart';
 import 'package:sportsy_front/widgets/tournament_create_widgets/tournament_form.dart';
 
 class CreateTournamentPage extends StatefulWidget {
-  const CreateTournamentPage({super.key});
+  final VoidCallback fetchRooms;
+  const CreateTournamentPage({super.key, required this.fetchRooms});
 
   @override
   State<CreateTournamentPage> createState() => _CreateTournamentPageState();
@@ -15,9 +16,9 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
     return Scaffold(
       
       appBar: MyAppBar(title: "Create Tournament", ),
-      body: const SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24.0),
-          child: TournamentForm(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: TournamentForm(fetchRooms: widget.fetchRooms),
       ),
     );
   }
