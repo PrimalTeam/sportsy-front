@@ -13,8 +13,8 @@ Future<void> addUserToRoomWidget({
 }) {
   final TextEditingController emailTextController = TextEditingController();
   String selectedRole = "";
-  void addUserToRoom() {
-    AuthService.addUserToRoom(
+  void addUserToRoom() async {
+    await AuthService.addUserToRoom(
       AddUserToRoomDto(
         role: selectedRole,
         identifier: emailTextController.text,

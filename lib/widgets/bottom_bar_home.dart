@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class BottomBar extends StatelessWidget {
+class BottomBarHome extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  const BottomBar({super.key, required this.currentIndex, required this.onTap});
+  const BottomBarHome({super.key, required this.currentIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

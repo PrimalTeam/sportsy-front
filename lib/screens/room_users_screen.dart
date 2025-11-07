@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:sportsy_front/widgets/room_users/add_user_to_room_widget.dart';
 import 'package:sportsy_front/widgets/room_users/room_users_list.dart';
 
-class RoomUsersPage extends StatelessWidget {
+class RoomUsersScreen extends StatelessWidget {
   final GlobalKey<RoomUsersListState> roomUsersListKey = GlobalKey<RoomUsersListState>();
-  RoomUsersPage({super.key, required this.roomId, required this.role});
+  RoomUsersScreen({super.key, required this.roomId, required this.role});
   final String role;
   final int roomId;
 

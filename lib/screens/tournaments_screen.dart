@@ -4,7 +4,7 @@ import 'package:sportsy_front/modules/services/auth.dart';
 import 'package:sportsy_front/screens/create_tournament_screen.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/game_home_widget.dart';
-import '../widgets/bottom_bar.dart';
+import '../widgets/bottom_bar_home.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -67,12 +67,12 @@ class _MyHomePageState extends State<MyHomePage> {
           return GameHomeWidget(gameDetails: filteredGames[index]);
         },
       ),
-      bottomNavigationBar: BottomBar(
+      bottomNavigationBar: BottomBarHome(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
       floatingActionButton: FloatingActionButton(onPressed: (){
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) => CreateTournamentPage(fetchRooms: fetchRooms),));
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => CreateTournamentScreen(fetchRooms: fetchRooms),));
       },child: Icon(Icons.add), 
       ),
 

@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
-import 'package:sportsy_front/screens/room_users_page.dart';
+import 'package:sportsy_front/screens/room_users_screen.dart';
 import 'package:sportsy_front/screens/tournament_info.dart';
 
 import 'package:sportsy_front/widgets/app_bar.dart';
 
-class GamePage extends StatelessWidget {
+class ShowTournaments extends StatelessWidget {
   final dynamic gameDetails;
 
-  const GamePage({super.key, required this.gameDetails});
+  const ShowTournaments({super.key, required this.gameDetails});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MyAppBar(title: gameDetails.name),
+      appBar: AppBar(title: gameDetails.name),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -43,7 +42,7 @@ class GamePage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) => RoomUsersPage(
+                            (context) => RoomUsersScreen(
                               roomId: gameDetails.id,
                               role: gameDetails.role,
                             ),

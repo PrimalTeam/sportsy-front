@@ -3,7 +3,7 @@ import 'package:sportsy_front/custom_colors.dart';
 
 /// Czysty widget UI — nie zawiera logiki nawigacji.
 /// Wysyła tylko sygnał przez callback `onTabSelected`.
-Widget buildBottomTabBar({
+Widget buildTournamentBottomBar({
   required BuildContext context,
   required TabController tabController,
   required ValueChanged<int> onTabSelected,

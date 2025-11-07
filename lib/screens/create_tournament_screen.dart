@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
 import 'package:sportsy_front/widgets/tournament_create_widgets/tournament_form.dart';
 
-class CreateTournamentPage extends StatefulWidget {
+class CreateTournamentScreen extends StatefulWidget {
   final VoidCallback fetchRooms;
-  const CreateTournamentPage({super.key, required this.fetchRooms});
+  const CreateTournamentScreen({super.key, required this.fetchRooms});
 
   @override
-  State<CreateTournamentPage> createState() => _CreateTournamentPageState();
+  State<CreateTournamentScreen> createState() => _CreateTournamentScreenState();
 }
 
-class _CreateTournamentPageState extends State<CreateTournamentPage> {
+class _CreateTournamentScreenState extends State<CreateTournamentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

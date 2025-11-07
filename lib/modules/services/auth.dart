@@ -174,24 +174,21 @@ static Future<Response> addTeam(TeamAddDto teamAddDto, int roomId) async {
   }
 }
 
-static Future<List<GetTeamsDto>> getTeamsOfTournament(dynamic tournamentId) async {
+static Future<List<GetTeamsDto>> getTeamsOfTournament(int tournamentId) async {
   try {
     final response = await _dio.get('/team/getByTournament/$tournamentId');
-    if (response.statusCode == 200) {
-      // Check if the response is wrapped in an object
-      final data = response.data;
-      if (data is Map<String, dynamic> && data.containsKey('teams')) {
-        final List<dynamic> teams = data['teams'] as List<dynamic>;
-        return teams.map((team) => GetTeamsDto.fromJson(team as Map<String, dynamic>)).toList();
-      } else if (data is List<dynamic>) {
-        // If the response is already a list
-        return data.map((team) => GetTeamsDto.fromJson(team as Map<String, dynamic>)).toList();
-      } else {
-        throw Exception('Unexpected response format');
-      }
+    final data = response.data;
+
+    List<dynamic> list;
+    if (data is Map<String, dynamic> && data.containsKey('teams')) {
+      list = (data['teams'] as List<dynamic>);
+    } else if (data is List) {
+      list = data;
     } else {
-      throw Exception('Failed to load teams');
+      throw Exception('Unexpected response format: ${data.runtimeType}');
     }
+
+    return list.map((team) => GetTeamsDto.fromJson(team as Map<String, dynamic>)).toList();
   } on DioException catch (e) {
     print('Error fetching teams of tournament: ${e.response?.data}');
     throw Exception('Failed to fetch teams of tournament: ${e.response?.data}');

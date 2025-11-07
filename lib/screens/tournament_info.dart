@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/modules/services/auth.dart';
-import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
-import 'package:sportsy_front/screens/room_users_page.dart';
+import 'package:sportsy_front/screens/room_users_screen.dart';
+import 'package:sportsy_front/screens/teams_show_page.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
-import 'package:sportsy_front/widgets/bottom_app_bar.dart';
+import 'package:sportsy_front/widgets/tournament_bottom_bar.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
+import 'package:sportsy_front/screens/tournament_info_edit_page.dart';
 
 class TournamentInfoPage extends StatefulWidget {
   const TournamentInfoPage({super.key, required this.roomId});
@@ -20,7 +21,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
   late TabController _tabController;
   RoomInfoDto? _roomInfo;
   bool _isLoading = true;
-  String role = "admin"; // Przykład roli, dostosuj do swojego kontekstu
+  String role = "admin"; 
 
   @override
   void initState() {
@@ -82,20 +83,17 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
                       ),
                     ),
                     Center(
-                      child: Text(
-                        'Widok drabinki',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: TeamsShowPage(roomId: widget.roomId),
                     ),
                     Center(
-                      child: RoomUsersPage(roomId: widget.roomId, role: role)
+                      child: RoomUsersScreen(roomId: widget.roomId, role: role)
                     ),
                   ],
                 ),
               ),
       bottomNavigationBar: Material(
         color: Colors.black,
-        child: buildBottomTabBar(
+        child: buildTournamentBottomBar(
           context: context,
           tabController: _tabController,
           onTabSelected: (index) {
@@ -107,7 +105,15 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          print("FloatingActionButton clicked!");
+          // Pass the fetched room info to the edit page so the form can be pre-filled
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => TournamentInfoEdit(
+                roomId: widget.roomId,
+                initialRoomInfo: _roomInfo,
+              ),
+            ),
+          );
         },
         backgroundColor: AppColors.accent,
         child: const Icon(Icons.edit),

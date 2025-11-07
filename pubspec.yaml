@@ -30,7 +30,7 @@ environment:
 dependencies:
   google_fonts:
   jwt_decoder:     
-  json_annotation: 
+  json_annotation: ^4.9.0 
   json_serializable:
   http:
   dropdown_search:
