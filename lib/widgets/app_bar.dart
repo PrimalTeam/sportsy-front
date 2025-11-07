@@ -1,88 +1,74 @@
 import 'package:flutter/material.dart';
-import 'package:sportsy_front/screens/profile_jwt_test.dart';
+import 'package:sportsy_front/custom_colors.dart';
+
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const MyAppBar({super.key, required this.title, this.onSearchChanged});
+  const MyAppBar({
+    super.key,
+    this.appBarChild,
+    required this.title,
+    this.onSearchChanged,
+  });
 
   final String title;
+  final Widget? appBarChild;
   final ValueChanged<String>? onSearchChanged;
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
-        toolbarHeight: 140,
-        backgroundColor: const Color(0xff130f34),
-        
-        title: Column(
+      backgroundColor: AppColors.primary,
+      toolbarHeight: preferredSize.height,
+      title: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  onTap: (){ 
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileJwtTestScreen(),));
-                  },
-                
-                child:
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Color(0xff283963),
-                  child: Icon(Icons.person, color: Colors.black),
-                ),
+                  onTap: () {},
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.black,
+                    child: const Icon(Icons.person, color: Colors.white),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.headlineLarge,
-                ),
-                Spacer(),
-                Container(
-                  width: 40,
-                  height: 40,
-                  
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xff283963),
-                  ),
-                  child: IconButton(
-                    
-                    icon: const Icon(Icons.settings, color: Colors.white),
-                    onPressed: () {
-                      // Add your settings action here
-                    },
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                const Spacer(),
+
               ],
             ),
-
-            const SizedBox(height: 10),
-            TextField(
-              onChanged: onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'Search',
-                hintStyle: const TextStyle(color: Colors.white),
-                prefixIcon: const Icon(Icons.search, color: Colors.white),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(100),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: const Color(0xff283963),
-              ),
-            ),
+            if (appBarChild != null) ...[
+              const SizedBox(height: 10),
+              appBarChild!,
+            ],
           ],
         ),
-
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(3),
-          child: Container(
-        height: 3,
-        color: Colors.grey,
-          ),
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(3),
+        child: Container(
+          height: 3,
+          color: AppColors.accent,
         ),
+      ),
     );
   }
-  
-  @override
 
-  Size get preferredSize => const Size.fromHeight(140 + 3);
+  @override
+  Size get preferredSize {
+    double baseHeight = 60; // Base height for title and row
+    double additionalHeight = appBarChild != null ? 40 : 0; // Height for appBarChild
+    return Size.fromHeight(baseHeight + additionalHeight + 3); // +3 for the bottom line
+  }
 }

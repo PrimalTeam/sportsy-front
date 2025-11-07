@@ -1,1 +1,1 @@
-final hosturl = 'http://34.59.253.25:3000';
+final hosturl = 'http://34.57.50.103:3000';

@@ -8,21 +8,15 @@ class JwtStorageService {
 
   JwtStorageService();
 
-   static Future<void> storeToken(String token) async {
-    try {
-      await _storage.write(key: _jwtTokenKey, value: token);
-    } catch (e) {
-      print("Error storing JWT token: $e");
-    }
+  static Future<void> storeToken(String token) async {
+    print('Storing Access Token: $token');
+    await _storage.write(key: _jwtTokenKey, value: token);
   }
 
   static Future<String?> getToken() async {
-    try {
-      return await _storage.read(key: _jwtTokenKey);
-    } catch (e) {
-      print("Error retrieving JWT token: $e");
-      return null;
-    }
+    String? token = await _storage.read(key: _jwtTokenKey);
+    print('Retrieved Access Token: $token');
+    return token;
   }
 
   static Future<void> storeRefreshToken(String refreshToken) async {
@@ -57,6 +51,19 @@ class JwtStorageService {
     } catch (e) {
       print("Error retrieving token data: $e");
       return null;
+    }
+  }
+
+  static Future<bool> isTokenMissingOrExpired() async {
+    try {
+      final token = await getToken();
+      if (token == null || JwtDecoder.isExpired(token)) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Error checking token status: $e");
+      return true;
     }
   }
 }

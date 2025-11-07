@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:sportsy_front/custom_colors.dart';
+import 'package:sportsy_front/screens/tournament_info_edit_page.dart';
+import 'screens/tournaments_screen.dart';
 import 'screens/login_screen.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   runApp(const MyApp());
@@ -7,12 +13,83 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      initialRoute: '/login',
+      theme: ThemeData(
+        appBarTheme: AppBarTheme(
+          iconTheme: IconThemeData(color: AppColors.accent),
+        ),
+
+        iconTheme: IconThemeData(color: AppColors.accent),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 0, 0, 0),
+
+        textTheme: GoogleFonts.poppinsTextTheme().apply(
+          bodyColor: Colors.white,
+          displayColor: Colors.white,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          prefixIconColor: AppColors.accent,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(100)),
+          filled: true,
+          fillColor: AppColors.primary,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 10,
+            horizontal: 15,
+          ),
+          hintStyle: GoogleFonts.poppins(color: Colors.white54),
+          labelStyle: GoogleFonts.poppins(color: Colors.white),
+        ),
+
+        dropdownMenuTheme: DropdownMenuThemeData(
+          textStyle: TextStyle(backgroundColor: Colors.amber),
+          inputDecorationTheme: InputDecorationTheme(
+            constraints: const BoxConstraints(minHeight: 48, maxHeight: 48),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 5,
+              horizontal: 10,
+            ),
+
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(100)),
+            ),
+
+            filled: true,
+            fillColor: AppColors.primary,
+            hintStyle: GoogleFonts.poppins(color: Colors.white54),
+            labelStyle: GoogleFonts.poppins(color: Colors.white),
+          ),
+        ),
+
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            textStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+            backgroundColor: AppColors.primary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(100),
+              side: const BorderSide(color: AppColors.accent, width: 2),
+            ),
+          ),
+        ),
+      ),
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/home': (context) => const MyHomePage(title: "Title"),
+        '/tournament_edit': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments;
+          final id = args is int ? args : 0;        
+          return TournamentInfoEdit(roomId: id); // nie const
+        },
+      },
     );
   }
 }
