@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:sportsy_front/dto/add_user_to_room_dto.dart';
 import 'package:sportsy_front/dto/create_room_dto.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
 import 'package:sportsy_front/dto/get_room_users_dto.dart';
 import 'package:sportsy_front/dto/get_teams_dto.dart';
-import 'package:sportsy_front/dto/get_tournament_dto.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
 import 'package:sportsy_front/dto/team_add_dto.dart';
 import 'package:sportsy_front/modules/services/auth_interceptor.dart';
@@ -192,6 +193,27 @@ static Future<List<GetTeamsDto>> getTeamsOfTournament(int tournamentId) async {
   } on DioException catch (e) {
     print('Error fetching teams of tournament: ${e.response?.data}');
     throw Exception('Failed to fetch teams of tournament: ${e.response?.data}');
+  }
+}
+
+static Future<Response> updateTeam({
+  required int roomId,
+  required int id,
+  required String name,
+  Uint8List? icon,
+}) async {
+  try {
+    // Match TeamAddDto behavior: send icon as base64 string (not Buffer)
+    final Map<String, dynamic> body = {
+      'name': name,
+      if (icon != null) 'icon': base64Encode(icon),
+    };
+    // Use PATCH as per Swagger
+    final response = await _dio.patch('/team/$roomId/$id', data: body);
+    return response;
+  } on DioException catch (e) {
+    print('Error updating team: ${e.response?.data}');
+    throw Exception('Failed to update team: ${e.response?.data}');
   }
 }
 }

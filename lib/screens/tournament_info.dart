@@ -7,6 +7,7 @@ import 'package:sportsy_front/widgets/app_bar.dart';
 import 'package:sportsy_front/widgets/tournament_bottom_bar.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
 import 'package:sportsy_front/screens/tournament_info_edit_page.dart';
+import 'package:sportsy_front/screens/tournament_overview_tab.dart';
 
 class TournamentInfoPage extends StatefulWidget {
   const TournamentInfoPage({super.key, required this.roomId});
@@ -75,7 +76,12 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildInfoTab(),
+                    if (_roomInfo?.tournament != null)
+                      TournamentOverviewTab(tournament: _roomInfo!.tournament!)
+                    else
+                      Center(
+                        child: Text('No data available', style: TextStyle(color: Colors.white)),
+                      ),
                     Center(
                       child: Text(
                         'Widok gier',
@@ -97,104 +103,29 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
           context: context,
           tabController: _tabController,
           onTabSelected: (index) {
-
+            setState(() {
               _tabController.animateTo(index);
-            
+            });
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Pass the fetched room info to the edit page so the form can be pre-filled
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => TournamentInfoEdit(
-                roomId: widget.roomId,
-                initialRoomInfo: _roomInfo,
-              ),
-            ),
-          );
-        },
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.edit),
-      ),
-    );
-  }
-
-  Widget _buildInfoTab() {
-    if (_roomInfo == null) {
-      return Center(
-        child: Text('No data available', style: TextStyle(color: Colors.white)),
-      );
-    }
-
-    final tournament = _roomInfo!.tournament;
-
-    return Container(
-      color: AppColors.background,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Title',
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              tournament!.info.title,
-              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
-            ),
-            const SizedBox(height: 24.0),
-            Text(
-              'Description',
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              tournament!.info.description,
-              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
-            ),
-            const SizedBox(height: 24.0),
-            Text(
-              'Date Start',
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              tournament.info.dateStart.toString(),
-              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
-            ),
-            const SizedBox(height: 24.0),
-            Text(
-              'Date End',
-              style: TextStyle(
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Text(
-              tournament.info.dateEnd.toString(),
-              style: TextStyle(fontSize: 18.0, color: AppColors.accent),
-            ),
-          ],
-        ),
-      ),
+      
+      floatingActionButton: (_tabController.index == 0 && !_isLoading && _roomInfo?.tournament != null)
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => TournamentInfoEdit(
+                      roomId: widget.roomId,
+                      initialRoomInfo: _roomInfo,
+                    ),
+                  ),
+                );
+              },
+              backgroundColor: AppColors.accent,
+              child: const Icon(Icons.edit),
+            )
+          : null,
     );
   }
 }

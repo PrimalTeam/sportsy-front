@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/get_teams_dto.dart';
+import 'package:sportsy_front/dto/room_info_dto.dart';
 import 'package:sportsy_front/modules/services/auth.dart';
-import 'package:sportsy_front/widgets/app_bar.dart';
+import 'package:sportsy_front/screens/team_edit_page.dart';
+// import 'package:sportsy_front/widgets/app_bar.dart'; // not used here currently
 
 class TeamsShowPage extends StatefulWidget {
   const TeamsShowPage({super.key, required this.roomId});
@@ -13,29 +15,41 @@ class TeamsShowPage extends StatefulWidget {
 
 class TeamsShowPageState extends State<TeamsShowPage> {
   List<GetTeamsDto> _teams = [];
+  RoomInfoDto? _roomInfo; // reserved for potential future UI meta usage
   bool _isLoading = true;
+  bool _error = false;
 
   final Color amber = const Color(0xFFFFC107);
   final Color black = Colors.black;
 
+
   @override
   void initState() {
     super.initState();
-    _fetchTeams();
+    _loadRoomAndTeams();
   }
 
-  Future<void> _fetchTeams() async {
+  Future<void> _loadRoomAndTeams() async {
     try {
-      final teams = await AuthService.getTeamsOfTournament(widget.roomId);
+      final room = await AuthService.getRoomInfo(widget.roomId);
+      final tournamentId = room.tournament?.id;
+      List<GetTeamsDto> teams = [];
+      if (tournamentId != null) {
+        teams = await AuthService.getTeamsOfTournament(widget.roomId);
+      }
       if (!mounted) return;
       setState(() {
+        _roomInfo = room;
         _teams = teams;
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Error fetching teams: $e');
+      debugPrint('Error loading room/teams: $e');
       if (!mounted) return;
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+        _error = true;
+      });
     }
   }
 
@@ -46,6 +60,13 @@ class TeamsShowPageState extends State<TeamsShowPage> {
         child:
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
+                : _error
+                ? Center(
+                    child: Text(
+                      'Failed to load teams',
+                      style: TextStyle(color: amber, fontWeight: FontWeight.bold),
+                    ),
+                  )
                 : _teams.isEmpty
                 ? Center(
                   child: Text(
@@ -67,30 +88,25 @@ class TeamsShowPageState extends State<TeamsShowPage> {
                     final team = _teams[index];
                     final bytes = team.icon?.data;
                     final hasImage = bytes != null && bytes.isNotEmpty;
-
-                    Widget leading =
-                        hasImage
-                            ? ClipOval(
-                              child: Image.memory(
-                                bytes!,
-                                width: 52,
-                                height: 52,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (_, __, ___) => CircleAvatar(
-                                      backgroundColor: black,
-                                      child: Icon(
-                                        Icons.broken_image,
-                                        color: amber,
-                                      ),
-                                    ),
+                    final Widget leading = hasImage
+                        ? ClipOval(
+                            child: Image.memory(
+                              bytes,
+                              width: 52,
+                              height: 52,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => CircleAvatar(
+                                radius: 26,
+                                backgroundColor: black,
+                                child: Icon(Icons.broken_image, color: amber),
                               ),
-                            )
-                            : CircleAvatar(
-                              radius: 26,
-                              backgroundColor: black,
-                              child: Icon(Icons.group, color: amber),
-                            );
+                            ),
+                          )
+                        : CircleAvatar(
+                            radius: 26,
+                            backgroundColor: black,
+                            child: Icon(Icons.group, color: amber),
+                          );
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -118,14 +134,20 @@ class TeamsShowPageState extends State<TeamsShowPage> {
                             color: amber,
                           ),
                         ),
-                        subtitle: Text(
-                          'Tournament ID: ${team.tournamentId}',
-                          style: TextStyle(
-                            color: Colors.grey[300],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        contentPadding: EdgeInsets.zero,
+                        onTap: () async {
+                          final changed = await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => TeamEditPage(
+                                roomId: widget.roomId,
+                                team: team,
+                              ),
+                            ),
+                          );
+                          if (changed == true) {
+                            _loadRoomAndTeams();
+                          }
+                        },
+        
                       ),
                     );
                   },
