@@ -35,7 +35,7 @@ class TeamsShowPageState extends State<TeamsShowPage> {
       final tournamentId = room.tournament?.id;
       List<GetTeamsDto> teams = [];
       if (tournamentId != null) {
-        teams = await AuthService.getTeamsOfTournament(widget.roomId);
+        teams = await AuthService.getTeamsOfTournament(tournamentId);
       }
       if (!mounted) return;
       setState(() {
@@ -51,6 +51,11 @@ class TeamsShowPageState extends State<TeamsShowPage> {
         _error = true;
       });
     }
+  }
+
+  // Public method to allow external refresh (e.g. after adding a team)
+  Future<void> reloadTeams() async {
+    await _loadRoomAndTeams();
   }
 
   @override

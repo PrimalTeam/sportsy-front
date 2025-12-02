@@ -74,7 +74,7 @@ builder: (context) => StatefulBuilder(
                 SizedBox(height: 10,),
               RadioListTile(
                 title: const Text("Role Spectator" , style: TextStyle(color: Colors.white)),
-                value: RoomUserRoleEnum.spectator.name, // Wartość dla tego przycisku
+                value: RoomUserRoleEnum.spectrator.name, // Wartość dla tego przycisku
                 groupValue: selectedRole, // Aktualnie wybrana wartość
                 onChanged: (value) {
                   setState(() {
