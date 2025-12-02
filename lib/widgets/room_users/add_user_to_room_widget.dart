@@ -6,14 +6,24 @@ import 'package:sportsy_front/modules/services/auth.dart';
 
 
 Future<void> addUserToRoomWidget({
+
   required BuildContext context,
   required int roomId,
-
+  required VoidCallback onUserAdded,
 }) {
   final TextEditingController emailTextController = TextEditingController();
-    String selectedRole = "";
-  void addUserToRoom(){
-    AuthService.addUserToRoom(AddUserToRoomDto(role: selectedRole, identifier: emailTextController.text, identifierType: 'email'), roomId);
+  String selectedRole = "";
+  void addUserToRoom() async {
+    await AuthService.addUserToRoom(
+      AddUserToRoomDto(
+        role: selectedRole,
+        identifier: emailTextController.text,
+        identifierType: 'email',
+      ),
+      roomId,
+    ).then((_) {
+      onUserAdded();
+    });
     Navigator.pop(context);
 
   }
@@ -64,7 +74,7 @@ builder: (context) => StatefulBuilder(
                 SizedBox(height: 10,),
               RadioListTile(
                 title: const Text("Role Spectator" , style: TextStyle(color: Colors.white)),
-                value: RoomUserRoleEnum.spectator.name, // Wartość dla tego przycisku
+                value: RoomUserRoleEnum.spectrator.name, // Wartość dla tego przycisku
                 groupValue: selectedRole, // Aktualnie wybrana wartość
                 onChanged: (value) {
                   setState(() {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
-import 'package:sportsy_front/screens/profile_jwt_test.dart';
-import '../modules/services/jwt_logic.dart';
+
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MyAppBar({
@@ -19,25 +18,18 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: AppColors.primary,
-      toolbarHeight: preferredSize.height, // Explicitly set the toolbar height
+      toolbarHeight: preferredSize.height,
       title: Padding(
-        padding: const EdgeInsets.only(top: 8), // Add padding to push content below the safe area
+        padding: const EdgeInsets.only(top: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // Ensure the column takes only the required space
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfileJwtTestScreen(),
-                      ),
-                    );
-                  },
+                  onTap: () {},
                   child: CircleAvatar(
                     radius: 20,
                     backgroundColor: Colors.black,
@@ -53,19 +45,7 @@ class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
                 const Spacer(),
-                // Container(
-                //   width: 40,
-                //   height: 40,
-                //   decoration: const BoxDecoration(
-                //     shape: BoxShape.circle,
-                //   ),
-                //   child: IconButton(
-                //     icon: const Icon(Icons.settings, color: Colors.white),
-                //     onPressed: () {
-                //       JwtStorageService.clearTokens();
-                //     },
-                //   ),
-                // ),
+
               ],
             ),
             if (appBarChild != null) ...[

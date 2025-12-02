@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
-import 'package:sportsy_front/screens/room_users_page.dart';
 
-Widget buildBottomTabBar(
-  BuildContext context,
-  TabController tabController,
-  int roomId,
-  String role,
-) {
+/// Czysty widget UI — nie zawiera logiki nawigacji.
+/// Wysyła tylko sygnał przez callback `onTabSelected`.
+Widget buildTournamentBottomBar({
+  required BuildContext context,
+  required TabController tabController,
+  required ValueChanged<int> onTabSelected,
+}) {
   return SafeArea(
     child: Material(
       color: Colors.transparent,
@@ -24,7 +24,7 @@ Widget buildBottomTabBar(
         ),
         child: TabBar(
           controller: tabController,
-          indicator: BoxDecoration(),
+          indicator: const BoxDecoration(),
           labelColor: AppColors.accent,
           unselectedLabelColor: Colors.white70,
           tabs: const [
@@ -33,25 +33,7 @@ Widget buildBottomTabBar(
             Tab(icon: Icon(Icons.leaderboard), text: 'LEADER'),
             Tab(icon: Icon(Icons.people), text: 'USERS'),
           ],
-          onTap: (index) {
-            if (index == 3) {
-              // Zakładka "USERS"
-              // Nawigacja do ekranu RoomUsersPage
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) => RoomUsersPage(
-                        roomId: roomId, // Przekazanie ID pokoju
-                        role: role, // Przekazanie roli użytkownika
-                      ),
-                ),
-              );
-            } else {
-              // Jeśli kliknięto inną zakładkę, po prostu przełączaj TabBar
-              tabController.animateTo(index);
-            }
-          },
+          onTap: onTabSelected, // tylko callback
         ),
       ),
     ),

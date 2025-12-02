@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/team_add_dto.dart';
-import 'package:sportsy_front/modules/tournament_services/creation_team_list.dart';
 class CreationTeamAdded extends StatefulWidget {
   final List<TeamAddDto> teams;
   const CreationTeamAdded({super.key, required this.teams});

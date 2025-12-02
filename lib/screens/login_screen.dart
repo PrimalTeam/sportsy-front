@@ -2,11 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
-import 'package:sportsy_front/screens/games_list_page.dart';
+import 'package:sportsy_front/screens/tournaments_screen.dart';
 import 'package:sportsy_front/screens/register_screen.dart';
-import 'package:sportsy_front/screens/team_page.dart';
-import 'package:sportsy_front/screens/teams_show_page.dart';
-import 'package:sportsy_front/screens/tournament_bracket_page.dart';
 import '../modules/services/auth.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -25,45 +22,45 @@ class LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   void _submit() async {
-    setState(() {
-      _isLoading = true;
-    });
-    AuthService.login(
-          LoginDto(
-            email: _emailController.text,
-            password: _passwordController.text,
-          ),
-        )
-        .then((response) {
-          if (response.statusCode == 201) {
-            if (mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  //builder: (context) => TeamsShowPage(),
-                  builder: (context) => MyHomePage(title: "homePage",),
-                ),
-                (Route<dynamic> route) => false,
-              );
-            }
-          } else {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text("Nieprawidłowe dane logowania")),
-              );
-            }
-          }
-        })
-        .catchError((error) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Wystąpił błąd. Spróbuj ponownie.")),
-            );
-          }
-        });
-    setState(() {
-      _isLoading = false;
-    });
+    if (_isLoading) return;
+    setState(() { _isLoading = true; });
+    try {
+      final response = await AuthService.login(
+        LoginDto(
+          email: _emailController.text,
+          password: _passwordController.text,
+        ),
+      );
+      if (!mounted) return;
+      if (response.statusCode == 201) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => MyHomePage(title: "homePage")),
+          (Route<dynamic> route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Nieprawidłowe dane logowania")),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Wystąpił błąd. Spróbuj ponownie.")),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() { _isLoading = false; });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override

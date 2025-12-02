@@ -1,12 +1,15 @@
 import 'package:dio/dio.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:sportsy_front/dto/add_user_to_room_dto.dart';
 import 'package:sportsy_front/dto/create_room_dto.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
+import 'package:sportsy_front/dto/game_create_dto.dart';
 import 'package:sportsy_front/dto/get_room_users_dto.dart';
 import 'package:sportsy_front/dto/get_teams_dto.dart';
-import 'package:sportsy_front/dto/get_tournament_dto.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
 import 'package:sportsy_front/dto/team_add_dto.dart';
+import 'package:sportsy_front/dto/user_profile_dto.dart';
 import 'package:sportsy_front/modules/services/auth_interceptor.dart';
 import 'api.dart';
 import 'jwt_logic.dart';
@@ -55,7 +58,6 @@ class AuthService extends Interceptor {
       );
       return response;
     } on DioException catch (e) {
-      print("Registration error: ${e.response?.data}");
       throw Exception('Failed to register: ${e.response?.data}');
     }
   }
@@ -150,6 +152,27 @@ static Future<List<GetRoomUsersDto>> getRoomUsers(int roomId) async {
     }
   }
 
+  static Future<Response> updateRoomUser({
+    required int roomId,
+    required String identifier,
+    required String identifierType,
+    required String role,
+  }) async {
+    try {
+      final body = {
+        'roomId': roomId,
+        'identifier': identifier,
+        'identifierType': identifierType,
+        'role': role,
+      };
+      final response = await _dio.patch('/roomUser/$roomId', data: body);
+      return response;
+    } on DioException catch (e) {
+      print("Error during updating Room User: ${e.response?.data}");
+      throw Exception('Failed to update Room User: ${e.response?.data}');
+    }
+  }
+
   static Future<RoomInfoDto> getRoomInfo(int roomId) async {
   try {
     final response = await _dio.get('/room/$roomId?include=tournament.games.teams&include=tournament.teams.games'); 
@@ -175,27 +198,71 @@ static Future<Response> addTeam(TeamAddDto teamAddDto, int roomId) async {
   }
 }
 
-static Future<List<GetTeamsDto>> getTeamsOfTournament(dynamic tournamentId) async {
+static Future<List<GetTeamsDto>> getTeamsOfTournament(int tournamentId) async {
   try {
     final response = await _dio.get('/team/getByTournament/$tournamentId');
-    if (response.statusCode == 200) {
-      // Check if the response is wrapped in an object
-      final data = response.data;
-      if (data is Map<String, dynamic> && data.containsKey('teams')) {
-        final List<dynamic> teams = data['teams'] as List<dynamic>;
-        return teams.map((team) => GetTeamsDto.fromJson(team as Map<String, dynamic>)).toList();
-      } else if (data is List<dynamic>) {
-        // If the response is already a list
-        return data.map((team) => GetTeamsDto.fromJson(team as Map<String, dynamic>)).toList();
-      } else {
-        throw Exception('Unexpected response format');
-      }
+    final data = response.data;
+
+    List<dynamic> list;
+    if (data is Map<String, dynamic> && data.containsKey('teams')) {
+      list = (data['teams'] as List<dynamic>);
+    } else if (data is List) {
+      list = data;
     } else {
-      throw Exception('Failed to load teams');
+      throw Exception('Unexpected response format: ${data.runtimeType}');
     }
+
+    return list.map((team) => GetTeamsDto.fromJson(team as Map<String, dynamic>)).toList();
   } on DioException catch (e) {
     print('Error fetching teams of tournament: ${e.response?.data}');
     throw Exception('Failed to fetch teams of tournament: ${e.response?.data}');
+  }
+}
+
+static Future<Response> updateTeam({
+  required int roomId,
+  required int id,
+  required String name,
+  Uint8List? icon,
+}) async {
+  try {
+    // Match TeamAddDto behavior: send icon as base64 string (not Buffer)
+    final Map<String, dynamic> body = {
+      'name': name,
+      if (icon != null) 'icon': base64Encode(icon),
+    };
+    // Use PATCH as per Swagger
+    final response = await _dio.patch('/team/$roomId/$id', data: body);
+    return response;
+  } on DioException catch (e) {
+    print('Error updating team: ${e.response?.data}');
+    throw Exception('Failed to update team: ${e.response?.data}');
+  }
+}
+
+  static Future<UserProfileDto> getUserProfile(String username) async {
+    try {
+      final response = await _dio.get('/user/profile/$username');
+      final data = response.data as Map<String, dynamic>;
+      return UserProfileDto.fromJson(data);
+    } on DioException catch (e) {
+      print('Error fetching user profile: ${e.response?.data}');
+      throw Exception('Failed to fetch user profile: ${e.response?.data}');
+    }
+  }
+
+static Future<Response> createGame({
+  required int roomId,
+  required int tournamentId,
+  required GameCreateDto game,
+}) async {
+  try {
+    final body = game.toJson();
+    print('createGame -> roomId=$roomId tournamentId=$tournamentId payload=$body');
+    return await _dio.post('/game/$roomId/$tournamentId', data: body);
+  } on DioException catch (e) {
+    print('Error creating game: ${e.response?.data}');
+    throw Exception('Failed to create game: ${e.response?.data}');
   }
 }
 }

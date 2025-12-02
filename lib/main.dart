@@ -1,17 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sportsy_front/custom_colors.dart';
-import 'package:sportsy_front/modules/tournament_services/tournament_info_struct.dart';
-import 'package:sportsy_front/screens/home_page.dart';
-import 'package:sportsy_front/screens/tournament_games_page.dart';
-import 'package:sportsy_front/screens/tournament_info.dart';
-import 'screens/games_list_page.dart';
+import 'package:sportsy_front/screens/tournament_info_edit_page.dart';
+import 'screens/tournaments_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/create_tournament_page.dart';
-
-import 'screens/team_page.dart';
-import 'screens/team_user.dart';
-import 'screens/team_status.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -90,14 +82,13 @@ class MyApp extends StatelessWidget {
         ),
       ),
       routes: {
-        '/tournamentgames': (context) => const TournamentGamesPage(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const MyHomePage(title: "Title"),
-        '/ctournament': (context) => const CreateTournamentPage(),
-        '/homepage': (context) => const HomePage(),
-        '/teampage': (context) => const TeamPage(),
-        '/teamuser': (context) => const TeamUser(),
-        '/teamstatus': (context) => const TeamStatus(),
+        '/tournament_edit': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments;
+          final id = args is int ? args : 0;        
+          return TournamentInfoEdit(roomId: id); // nie const
+        },
       },
     );
   }
