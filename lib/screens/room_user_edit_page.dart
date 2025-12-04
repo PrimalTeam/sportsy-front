@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/get_room_users_dto.dart';
 import 'package:sportsy_front/dto/room_user_role_enum.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
+import 'package:sportsy_front/features/room_users/data/room_users_remote_service.dart';
 
 class RoomUserEditPage extends StatefulWidget {
   const RoomUserEditPage({super.key, required this.roomId, required this.user});
@@ -37,7 +37,7 @@ class _RoomUserEditPageState extends State<RoomUserEditPage> {
     setState(() => _saving = true);
     try {
       // Przekazujemy niezmienione identyfikatory (backend może ich wymagać) – używamy username z dto.
-      await AuthService.updateRoomUser(
+      await RoomUsersRemoteService.updateRoomUser(
         roomId: widget.roomId,
         identifier: widget.user.user.username,
         identifierType: 'username',
@@ -47,9 +47,9 @@ class _RoomUserEditPageState extends State<RoomUserEditPage> {
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update user: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to update user: $e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -70,20 +70,24 @@ class _RoomUserEditPageState extends State<RoomUserEditPage> {
           children: [
             Text('Użytkownik', style: const TextStyle(color: Colors.white70)),
             const SizedBox(height: 8),
-            Text(widget.user.user.username, style: const TextStyle(color: Colors.white, fontSize: 16)),
+            Text(
+              widget.user.user.username,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
             const SizedBox(height: 24),
             Text('Rola', style: const TextStyle(color: Colors.white70)),
             const SizedBox(height: 8),
             DropdownButtonFormField<RoomUserRoleEnum>(
               value: _roleEnum,
-              items: RoomUserRoleEnum.values
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(e.displayName),
-                    ),
-                  )
-                  .toList(),
+              items:
+                  RoomUserRoleEnum.values
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(e.displayName),
+                        ),
+                      )
+                      .toList(),
               onChanged: (v) => setState(() => _roleEnum = v ?? _roleEnum),
               dropdownColor: Colors.black,
               style: const TextStyle(color: Colors.white),
@@ -93,12 +97,19 @@ class _RoomUserEditPageState extends State<RoomUserEditPage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _saving ? null : _save,
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-                child: _saving
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('Zapisz rolę'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child:
+                    _saving
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Text('Zapisz rolę'),
               ),
-            )
+            ),
           ],
         ),
       ),

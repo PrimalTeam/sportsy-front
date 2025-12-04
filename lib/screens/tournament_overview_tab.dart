@@ -74,7 +74,6 @@ class TournamentOverviewTab extends StatelessWidget {
           ],
         ),
       ),
-      
     );
   }
 }

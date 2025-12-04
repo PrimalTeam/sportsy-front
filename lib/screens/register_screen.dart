@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
+import 'package:sportsy_front/features/auth/data/auth_remote_service.dart';
 import 'login_screen.dart';
-import '../modules/services/auth.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -25,7 +25,7 @@ class RegisterScreenState extends State<RegisterScreen> {
   AuthMode _selectedMode = AuthMode.register;
 
   void _submit() {
-    AuthService.register(
+    AuthRemoteService.register(
           RegisterDto(
             email: _emailController.text,
             password: _passwordController.text,
@@ -46,9 +46,9 @@ class RegisterScreenState extends State<RegisterScreen> {
         })
         .catchError((error) {
           if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Register error.")),
-          );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text("Register error.")));
           }
         });
   }
@@ -81,12 +81,18 @@ class RegisterScreenState extends State<RegisterScreen> {
                     segments: const <ButtonSegment<AuthMode>>[
                       ButtonSegment<AuthMode>(
                         value: AuthMode.login,
-                        label: Text("Login", style: TextStyle(color: Colors.grey),),
-                        icon: Icon(Icons.login, color: Colors.grey,),
+                        label: Text(
+                          "Login",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        icon: Icon(Icons.login, color: Colors.grey),
                       ),
                       ButtonSegment<AuthMode>(
                         value: AuthMode.register,
-                        label: Text("Register", style: TextStyle(color: Colors.black),),
+                        label: Text(
+                          "Register",
+                          style: TextStyle(color: Colors.black),
+                        ),
                         icon: Icon(Icons.app_registration),
                       ),
                     ],
@@ -110,7 +116,6 @@ class RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: "Name",
                     prefixIcon: const Icon(Icons.person),
-                  
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -179,7 +184,6 @@ class RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
 
                 SizedBox(
-
                   child: ElevatedButton(
                     onPressed: _submit,
 

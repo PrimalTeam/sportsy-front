@@ -3,7 +3,8 @@ import 'package:sportsy_front/widgets/room_users/add_user_to_room_widget.dart';
 import 'package:sportsy_front/widgets/room_users/room_users_list.dart';
 
 class RoomUsersScreen extends StatelessWidget {
-  final GlobalKey<RoomUsersListState> roomUsersListKey = GlobalKey<RoomUsersListState>();
+  final GlobalKey<RoomUsersListState> roomUsersListKey =
+      GlobalKey<RoomUsersListState>();
   RoomUsersScreen({super.key, required this.roomId, required this.role});
   final String role;
   final int roomId;
@@ -29,7 +30,11 @@ class RoomUsersScreen extends StatelessWidget {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  addUserToRoomWidget(context: context, roomId: roomId, onUserAdded: _triggerUserRefresh);
+                  addUserToRoomWidget(
+                    context: context,
+                    roomId: roomId,
+                    onUserAdded: _triggerUserRefresh,
+                  );
                 },
                 child: Text("Add new Users"),
               ),

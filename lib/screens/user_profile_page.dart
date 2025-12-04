@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/user_profile_dto.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
+import 'package:sportsy_front/features/user_profile/data/user_profile_remote_service.dart';
 
 class UserProfilePage extends StatelessWidget {
   const UserProfilePage({super.key, required this.username});
@@ -21,7 +21,7 @@ class UserProfilePage extends StatelessWidget {
       ),
       backgroundColor: AppColors.background,
       body: FutureBuilder<UserProfileDto>(
-        future: AuthService.getUserProfile(username),
+        future: UserProfileRemoteService.getUserProfile(username),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -36,7 +36,10 @@ class UserProfilePage extends StatelessWidget {
           }
           if (!snapshot.hasData) {
             return const Center(
-              child: Text('Brak danych profilu', style: TextStyle(color: Colors.white)),
+              child: Text(
+                'Brak danych profilu',
+                style: TextStyle(color: Colors.white),
+              ),
             );
           }
           final profile = snapshot.data!;
@@ -45,13 +48,29 @@ class UserProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('ID: ${profile.id}', style: const TextStyle(color: Colors.white70)),
+                Text(
+                  'ID: ${profile.id}',
+                  style: const TextStyle(color: Colors.white70),
+                ),
                 const SizedBox(height: 8),
-                Text('Nazwa użytkownika', style: const TextStyle(color: Colors.white54)),
-                Text(profile.username, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  'Nazwa użytkownika',
+                  style: const TextStyle(color: Colors.white54),
+                ),
+                Text(
+                  profile.username,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Text('Email', style: const TextStyle(color: Colors.white54)),
-                Text(profile.email, style: const TextStyle(color: Colors.white)),
+                Text(
+                  profile.email,
+                  style: const TextStyle(color: Colors.white),
+                ),
                 const SizedBox(height: 16),
                 Text('Role', style: const TextStyle(color: Colors.white54)),
                 Text(
@@ -59,17 +78,25 @@ class UserProfilePage extends StatelessWidget {
                   style: const TextStyle(color: Colors.white),
                 ),
                 const SizedBox(height: 16),
-                Text('Utworzono', style: const TextStyle(color: Colors.white54)),
-                Text(_formatDate(profile.createdAt), style: const TextStyle(color: Colors.white)),
+                Text(
+                  'Utworzono',
+                  style: const TextStyle(color: Colors.white54),
+                ),
+                Text(
+                  _formatDate(profile.createdAt),
+                  style: const TextStyle(color: Colors.white),
+                ),
                 const Spacer(),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(foregroundColor: AppColors.secondary),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.secondary,
+                    ),
                     child: const Text('Zamknij'),
                   ),
-                )
+                ),
               ],
             ),
           );

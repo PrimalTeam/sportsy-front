@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
+import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
 import 'package:sportsy_front/screens/create_tournament_screen.dart';
-import 'package:sportsy_front/modules/services/jwt_logic.dart';
+import 'package:sportsy_front/core/auth/jwt_storage_service.dart';
 import 'package:sportsy_front/screens/user_profile_page.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/game_home_widget.dart';
@@ -38,9 +38,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   List<GetRoomDto> roomsList = [];
- Future<void> fetchRooms() async { // zmieniono: Future<void>
+  Future<void> fetchRooms() async {
+    // zmieniono: Future<void>
     try {
-      final rooms = await AuthService.getRooms();
+      final rooms = await RoomsRemoteService.getRooms();
       if (!mounted) return;
       setState(() {
         // nowa instancja listy, żeby na pewno zainicjować rebuild
@@ -120,41 +121,50 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredGames = roomsList
-        .where((game) => game.name.toLowerCase().contains(searchQuery.toLowerCase()))
-        .toList();
+    final filteredGames =
+        roomsList
+            .where(
+              (game) =>
+                  game.name.toLowerCase().contains(searchQuery.toLowerCase()),
+            )
+            .toList();
 
     return Scaffold(
-      appBar: _selectedIndex == 2
-          ? AppBar(
-              title: const Text('Profile'),
-              automaticallyImplyLeading: false,
-            )
-          : MyAppBar(title: 'Games list'),
-      body: _selectedIndex == 2
-          ? _buildProfileBody()
-          : ListView.builder(
-              itemCount: filteredGames.length,
-              itemBuilder: (context, index) {
-                return GameHomeWidget(gameDetails: filteredGames[index]);
-              },
-            ),
+      appBar:
+          _selectedIndex == 2
+              ? AppBar(
+                title: const Text('Profile'),
+                automaticallyImplyLeading: false,
+              )
+              : MyAppBar(title: 'Games list'),
+      body:
+          _selectedIndex == 2
+              ? _buildProfileBody()
+              : ListView.builder(
+                itemCount: filteredGames.length,
+                itemBuilder: (context, index) {
+                  return GameHomeWidget(gameDetails: filteredGames[index]);
+                },
+              ),
       bottomNavigationBar: BottomBarHome(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
       ),
-      floatingActionButton: _selectedIndex == 2
-          ? null
-          : FloatingActionButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => CreateTournamentScreen(fetchRooms: fetchRooms),
-                  ),
-                );
-              },
-              child: const Icon(Icons.add),
-            ),
+      floatingActionButton:
+          _selectedIndex == 2
+              ? null
+              : FloatingActionButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              CreateTournamentScreen(fetchRooms: fetchRooms),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.add),
+              ),
     );
   }
 }

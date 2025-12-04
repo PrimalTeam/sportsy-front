@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
+import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
+import 'package:sportsy_front/features/teams/data/teams_remote_service.dart';
 import 'package:sportsy_front/screens/room_users_screen.dart';
 import 'package:sportsy_front/screens/teams_show_page.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
@@ -11,8 +12,10 @@ import 'package:sportsy_front/widgets/games_tab.dart';
 import 'package:sportsy_front/widgets/tournament_bottom_bar.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
 import 'package:sportsy_front/dto/get_teams_dto.dart';
+import 'package:sportsy_front/dto/get_tournament_dto.dart';
 import 'package:sportsy_front/screens/tournament_info_edit_page.dart';
 import 'package:sportsy_front/screens/tournament_overview_tab.dart';
+import 'package:sportsy_front/screens/games_page.dart';
 
 class TournamentInfoPage extends StatefulWidget {
   const TournamentInfoPage({super.key, required this.roomId});
@@ -27,27 +30,33 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
   late TabController _tabController;
   RoomInfoDto? _roomInfo;
   bool _isLoading = true;
-  String role = "admin"; 
-  final GlobalKey<TeamsShowPageState> _teamsKey = GlobalKey<TeamsShowPageState>();
+  String role = "admin";
+  final GlobalKey<TeamsShowPageState> _teamsKey =
+      GlobalKey<TeamsShowPageState>();
+  final GlobalKey<GamesTabState> _gamesTabKey = GlobalKey<GamesTabState>();
   Set<int> _tournamentTeamIds = {};
   List<GetTeamsDto> _tournamentTeams = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _initializeData();
   }
 
   Future<void> _initializeData() async {
     try {
-      final roomInfo = await AuthService.getRoomInfo(widget.roomId);
-      debugPrint('TournamentInfo: fetched room info ${roomInfo.id}, tournament teams raw: ${roomInfo.tournament?.teams}');
+      final roomInfo = await RoomsRemoteService.getRoomInfo(widget.roomId);
+      debugPrint(
+        'TournamentInfo: fetched room info ${roomInfo.id}, tournament teams raw: ${roomInfo.tournament?.teams}',
+      );
       setState(() {
         _roomInfo = roomInfo;
         _tournamentTeams = _extractTournamentTeams(roomInfo);
         _tournamentTeamIds = _tournamentTeams.map((t) => t.id).toSet();
-        debugPrint('TournamentInfo: extracted tournament team IDs $_tournamentTeamIds');
+        debugPrint(
+          'TournamentInfo: extracted tournament team IDs $_tournamentTeamIds',
+        );
         _isLoading = false;
       });
     } catch (e) {
@@ -79,7 +88,14 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Add Team', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Add Team',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 TeamAddForm(
                   onTeamAdded: (name, file) async {
@@ -87,7 +103,10 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
                     if (trimmed.isEmpty) return;
                     try {
                       final bytes = await file!.readAsBytes();
-                      await AuthService.addTeam(TeamAddDto(trimmed, bytes), widget.roomId);
+                      await TeamsRemoteService.addTeam(
+                        widget.roomId,
+                        TeamAddDto(trimmed, bytes),
+                      );
                       _teamsKey.currentState?.reloadTeams();
                       await _initializeData();
                       if (mounted) Navigator.pop(ctx);
@@ -126,14 +145,24 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
     if (entry is Map<String, dynamic>) {
       Map<String, dynamic>? candidate;
       if (entry['team'] is Map<String, dynamic>) {
-        candidate = Map<String, dynamic>.from(entry['team'] as Map<String, dynamic>);
+        candidate = Map<String, dynamic>.from(
+          entry['team'] as Map<String, dynamic>,
+        );
       } else {
         candidate = Map<String, dynamic>.from(entry);
       }
 
-      int? id = _asInt(candidate['id']) ?? _asInt(entry['teamId']) ?? _asInt(entry['id']);
-      final String? name = candidate['name'] as String? ?? entry['name'] as String?;
-      final int tournamentId = _asInt(candidate['tournamentId']) ?? _asInt(entry['tournamentId']) ?? fallbackTournamentId ?? 0;
+      int? id =
+          _asInt(candidate['id']) ??
+          _asInt(entry['teamId']) ??
+          _asInt(entry['id']);
+      final String? name =
+          candidate['name'] as String? ?? entry['name'] as String?;
+      final int tournamentId =
+          _asInt(candidate['tournamentId']) ??
+          _asInt(entry['tournamentId']) ??
+          fallbackTournamentId ??
+          0;
 
       IconDto? icon;
       final iconRaw = candidate['icon'] ?? entry['icon'];
@@ -188,20 +217,26 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
                       TournamentOverviewTab(tournament: _roomInfo!.tournament!)
                     else
                       Center(
-                        child: Text('No data available', style: TextStyle(color: Colors.white)),
+                        child: Text(
+                          'No data available',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     GamesTab(
+                      key: _gamesTabKey,
                       roomId: widget.roomId,
                       tournamentId: _roomInfo?.tournament?.id,
-                      allowedTeamIds: _tournamentTeamIds.isEmpty ? null : _tournamentTeamIds.toList(),
-                      initialTeams: _tournamentTeams.isEmpty ? null : _tournamentTeams,
                     ),
                     Center(
-                      child: TeamsShowPage(key: _teamsKey, roomId: widget.roomId),
+                      child: TeamsShowPage(
+                        key: _teamsKey,
+                        roomId: widget.roomId,
+                      ),
                     ),
                     Center(
-                      child: RoomUsersScreen(roomId: widget.roomId, role: role)
+                      child: RoomUsersScreen(roomId: widget.roomId, role: role),
                     ),
+                    _LeaderboardPlaceholder(tournament: _roomInfo?.tournament),
                   ],
                 ),
               ),
@@ -217,31 +252,90 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
           },
         ),
       ),
-      
-      floatingActionButton: !_isLoading
-          ? (_tabController.index == 0 && _roomInfo?.tournament != null)
-              ? FloatingActionButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => TournamentInfoEdit(
-                          roomId: widget.roomId,
-                          initialRoomInfo: _roomInfo,
-                        ),
-                      ),
-                    );
-                  },
-                  backgroundColor: AppColors.accent,
-                  child: const Icon(Icons.edit),
-                )
-              : (_tabController.index == 2)
+
+      floatingActionButton:
+          !_isLoading
+              ? (_tabController.index == 0 && _roomInfo?.tournament != null)
                   ? FloatingActionButton(
-                      onPressed: _openAddTeamSheet,
-                      backgroundColor: AppColors.accent,
-                      child: const Icon(Icons.group_add),
-                    )
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) => TournamentInfoEdit(
+                                roomId: widget.roomId,
+                                initialRoomInfo: _roomInfo,
+                              ),
+                        ),
+                      );
+                    },
+                    backgroundColor: AppColors.accent,
+                    child: const Icon(Icons.edit),
+                  )
+                  : (_tabController.index == 1 && _roomInfo?.tournament != null)
+                  ? FloatingActionButton(
+                    onPressed: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) => GamesPage(
+                                roomId: widget.roomId,
+                                tournamentId: _roomInfo?.tournament?.id,
+                                allowedTeamIds:
+                                    _tournamentTeamIds.isEmpty
+                                        ? null
+                                        : _tournamentTeamIds.toList(),
+                              ),
+                        ),
+                      );
+                      _gamesTabKey.currentState?.reloadGames();
+                    },
+                    backgroundColor: AppColors.accent,
+                    child: const Icon(Icons.add),
+                  )
+                  : (_tabController.index == 2)
+                  ? FloatingActionButton(
+                    onPressed: _openAddTeamSheet,
+                    backgroundColor: AppColors.accent,
+                    child: const Icon(Icons.group_add),
+                  )
                   : null
-          : null,
+              : null,
+    );
+  }
+}
+
+class _LeaderboardPlaceholder extends StatelessWidget {
+  const _LeaderboardPlaceholder({this.tournament});
+
+  final GetTournamentDto? tournament;
+
+  @override
+  Widget build(BuildContext context) {
+    if (tournament == null) {
+      return const Center(
+        child: Text(
+          'Leaderboard not available yet',
+          style: TextStyle(color: Colors.white70),
+        ),
+      );
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.leaderboard, color: AppColors.accent, size: 48),
+            const SizedBox(height: 12),
+            const Text(
+              'Leaderboard view is coming soon.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

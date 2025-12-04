@@ -1,1 +1,1 @@
-final hosturl = 'http://34.57.50.103:3000';
+export 'package:sportsy_front/core/network/api_config.dart';

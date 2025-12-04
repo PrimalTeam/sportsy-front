@@ -30,8 +30,9 @@ Widget buildTournamentBottomBar({
           tabs: const [
             Tab(icon: Icon(Icons.info), text: 'INFO'),
             Tab(icon: Icon(Icons.sports_esports), text: 'GAMES'),
-            Tab(icon: Icon(Icons.leaderboard), text: 'LEADER'),
+            Tab(icon: Icon(Icons.groups), text: 'TEAMS'),
             Tab(icon: Icon(Icons.people), text: 'USERS'),
+            Tab(icon: Icon(Icons.leaderboard), text: 'LEADER'),
           ],
           onTap: onTabSelected, // tylko callback
         ),

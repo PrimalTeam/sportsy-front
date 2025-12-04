@@ -18,8 +18,13 @@ class UserProfileDto {
       id: json['id'] as int,
       username: json['username'] as String,
       email: json['email'] as String,
-      roles: (json['roles'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
+      roles:
+          (json['roles'] as List<dynamic>? ?? [])
+              .map((e) => e.toString())
+              .toList(),
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 }

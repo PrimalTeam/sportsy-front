@@ -21,7 +21,7 @@ class GetTournamentDto {
     required this.roomId,
     required this.info,
     required this.games,
-    required this.teams
+    required this.teams,
   });
 
   factory GetTournamentDto.fromJson(Map<String, dynamic> json) =>

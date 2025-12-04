@@ -86,7 +86,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const MyHomePage(title: "Title"),
         '/tournament_edit': (context) {
           final args = ModalRoute.of(context)!.settings.arguments;
-          final id = args is int ? args : 0;        
+          final id = args is int ? args : 0;
           return TournamentInfoEdit(roomId: id); // nie const
         },
       },

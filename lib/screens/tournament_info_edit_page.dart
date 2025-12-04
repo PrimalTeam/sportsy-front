@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
+import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
 import 'package:sportsy_front/screens/room_users_screen.dart';
 import 'package:sportsy_front/screens/teams_show_page.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
@@ -8,7 +8,11 @@ import 'package:sportsy_front/widgets/tournament_bottom_bar.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
 
 class TournamentInfoEdit extends StatefulWidget {
-  const TournamentInfoEdit({super.key, required this.roomId, this.initialRoomInfo});
+  const TournamentInfoEdit({
+    super.key,
+    required this.roomId,
+    this.initialRoomInfo,
+  });
   final int roomId;
   final RoomInfoDto? initialRoomInfo;
 
@@ -53,7 +57,7 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
 
   Future<void> _initializeData() async {
     try {
-      final roomInfo = await AuthService.getRoomInfo(widget.roomId);
+      final roomInfo = await RoomsRemoteService.getRoomInfo(widget.roomId);
       print(roomInfo);
       setState(() {
         _roomInfo = roomInfo;
@@ -66,6 +70,7 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
       });
     }
   }
+
   Future<DateTime?> _pickDateTime(DateTime? initialDateTime) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -92,6 +97,7 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
     }
     return null;
   }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -148,7 +154,7 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
       );
     }
 
-  // using _roomInfo to prefill controllers; no local tournament variable needed here
+    // using _roomInfo to prefill controllers; no local tournament variable needed here
 
     return Container(
       color: AppColors.background,
@@ -216,7 +222,7 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
               ),
             ),
             SizedBox(height: 15),
-            ElevatedButton(onPressed: (){}, child: Text("Save Changes"))
+            ElevatedButton(onPressed: () {}, child: Text("Save Changes")),
           ],
         ),
       ),

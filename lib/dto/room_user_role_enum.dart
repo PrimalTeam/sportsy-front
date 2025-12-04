@@ -1,7 +1,4 @@
-enum RoomUserRoleEnum {
-  spectrator,
-  gameObserver,
-}
+enum RoomUserRoleEnum { spectrator, gameObserver }
 
 extension RoomUserRoleEnumX on RoomUserRoleEnum {
   /// Nazwa wyświetlana w UI (możesz łatwo zmienić lub podłączyć lokalizację).

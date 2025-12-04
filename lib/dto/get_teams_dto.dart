@@ -19,7 +19,8 @@ class GetTeamsDto {
     this.icon,
   });
 
-  factory GetTeamsDto.fromJson(Map<String, dynamic> json) => _$GetTeamsDtoFromJson(json);
+  factory GetTeamsDto.fromJson(Map<String, dynamic> json) =>
+      _$GetTeamsDtoFromJson(json);
   Map<String, dynamic> toJson() => _$GetTeamsDtoToJson(this);
 }
 
@@ -32,7 +33,8 @@ class IconDto {
 
   IconDto({required this.type, this.data});
 
-  factory IconDto.fromJson(Map<String, dynamic> json) => _$IconDtoFromJson(json);
+  factory IconDto.fromJson(Map<String, dynamic> json) =>
+      _$IconDtoFromJson(json);
   Map<String, dynamic> toJson() => _$IconDtoToJson(this);
 }
 
@@ -70,10 +72,13 @@ class Base64Converter implements JsonConverter<Uint8List?, Object?> {
     // list of ints (bytes) OR ascii codes of a base64 string
     if (json is List) {
       try {
-        final ints = json.map((e) => e is int ? e : (e is num ? e.toInt() : 0)).toList(growable: false);
+        final ints = json
+            .map((e) => e is int ? e : (e is num ? e.toInt() : 0))
+            .toList(growable: false);
 
         // Heuristic: if values look like ASCII text, try to decode as base64 string first
-        final bool looksAscii = ints.isNotEmpty && ints.every((v) => v >= 32 && v <= 126);
+        final bool looksAscii =
+            ints.isNotEmpty && ints.every((v) => v >= 32 && v <= 126);
         if (looksAscii) {
           String asString = String.fromCharCodes(ints);
           asString = asString.replaceAll(RegExp(r"\s+"), "");
@@ -107,7 +112,8 @@ class Base64Converter implements JsonConverter<Uint8List?, Object?> {
   }
 
   @override
-  Object? toJson(Uint8List? object) => object == null ? null : base64Encode(object);
+  Object? toJson(Uint8List? object) =>
+      object == null ? null : base64Encode(object);
 
   bool _isLikelyImage(Uint8List bytes) {
     if (bytes.lengthInBytes < 8) return false;
@@ -115,7 +121,10 @@ class Base64Converter implements JsonConverter<Uint8List?, Object?> {
     const png = [137, 80, 78, 71, 13, 10, 26, 10];
     bool isPng = true;
     for (int i = 0; i < png.length; i++) {
-      if (bytes[i] != png[i]) { isPng = false; break; }
+      if (bytes[i] != png[i]) {
+        isPng = false;
+        break;
+      }
     }
     if (isPng) return true;
 
@@ -126,9 +135,12 @@ class Base64Converter implements JsonConverter<Uint8List?, Object?> {
     if (bytes.length >= 12) {
       final riff = bytes.sublist(0, 4);
       final webp = bytes.sublist(8, 12);
-      if (String.fromCharCodes(riff) == 'RIFF' && String.fromCharCodes(webp) == 'WEBP') return true;
+      if (String.fromCharCodes(riff) == 'RIFF' &&
+          String.fromCharCodes(webp) == 'WEBP')
+        return true;
     }
     return false;
   }
 }
+
 // ...existing code...

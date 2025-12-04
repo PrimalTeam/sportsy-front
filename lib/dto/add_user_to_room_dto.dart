@@ -8,13 +8,13 @@ class AddUserToRoomDto {
   final String identifier;
   final String identifierType;
 
-
-AddUserToRoomDto({
-  required this.role,
-  required this.identifier,
-  required this.identifierType,
+  AddUserToRoomDto({
+    required this.role,
+    required this.identifier,
+    required this.identifierType,
   });
 
-  factory AddUserToRoomDto.fromJson(Map<String, dynamic> json) => _$AddUserToRoomDtoFromJson(json);
+  factory AddUserToRoomDto.fromJson(Map<String, dynamic> json) =>
+      _$AddUserToRoomDtoFromJson(json);
   Map<String, dynamic> toJson() => _$AddUserToRoomDtoToJson(this);
 }

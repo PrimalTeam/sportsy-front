@@ -9,8 +9,14 @@ class GetRoomDto {
   final String? icon;
   final String role;
 
-  GetRoomDto(this.icon,{required this.id, required this.name, required this.role} );
+  GetRoomDto(
+    this.icon, {
+    required this.id,
+    required this.name,
+    required this.role,
+  });
 
-  factory GetRoomDto.fromJson(Map<String, dynamic> json) => _$GetRoomDtoFromJson(json);
+  factory GetRoomDto.fromJson(Map<String, dynamic> json) =>
+      _$GetRoomDtoFromJson(json);
   Map<String, dynamic> toJson() => _$GetRoomDtoToJson(this);
 }

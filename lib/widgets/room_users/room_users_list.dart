@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/get_room_users_dto.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
+import 'package:sportsy_front/features/room_users/data/room_users_remote_service.dart';
 import 'package:sportsy_front/screens/user_profile_page.dart';
 import 'package:sportsy_front/screens/room_user_edit_page.dart';
 
@@ -23,7 +23,7 @@ class RoomUsersListState extends State<RoomUsersList> {
 
   Future<void> refreshUsers() async {
     setState(() {
-      roomUsers = AuthService.getRoomUsers(widget.roomId);
+      roomUsers = RoomUsersRemoteService.getRoomUsers(widget.roomId);
     });
   }
 
@@ -61,7 +61,10 @@ class RoomUsersListState extends State<RoomUsersList> {
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => UserProfilePage(username: user.user.username),
+                            builder:
+                                (_) => UserProfilePage(
+                                  username: user.user.username,
+                                ),
                           ),
                         );
                       },
@@ -73,10 +76,11 @@ class RoomUsersListState extends State<RoomUsersList> {
                       onPressed: () async {
                         final changed = await Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => RoomUserEditPage(
-                              roomId: widget.roomId,
-                              user: user,
-                            ),
+                            builder:
+                                (context) => RoomUserEditPage(
+                                  roomId: widget.roomId,
+                                  user: user,
+                                ),
                           ),
                         );
                         if (changed == true) {
@@ -88,10 +92,15 @@ class RoomUsersListState extends State<RoomUsersList> {
                       tooltip: 'Usuń z pokoju',
                       icon: const Icon(Icons.delete),
                       color: AppColors.warning,
-                      onPressed: () {
-                        AuthService.deleteUser(widget.roomId, user.id);
+                      onPressed: () async {
+                        await RoomUsersRemoteService.deleteUser(
+                          widget.roomId,
+                          user.id,
+                        );
                         setState(() {
-                          roomUsers = AuthService.getRoomUsers(widget.roomId);
+                          roomUsers = RoomUsersRemoteService.getRoomUsers(
+                            widget.roomId,
+                          );
                         });
                       },
                     ),

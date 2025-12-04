@@ -13,9 +13,16 @@ class TournamentDto {
   @JsonKey(defaultValue: [])
   final List<TeamAddDto> teams;
 
-  TournamentDto(this.info, this.leaderType, this.sportType, this.games,  this.teams);
+  TournamentDto(
+    this.info,
+    this.leaderType,
+    this.sportType,
+    this.games,
+    this.teams,
+  );
 
-  factory TournamentDto.fromJson(Map<String, dynamic> json) => _$TournamentDtoFromJson(json);
+  factory TournamentDto.fromJson(Map<String, dynamic> json) =>
+      _$TournamentDtoFromJson(json);
   Map<String, dynamic> toJson() => _$TournamentDtoToJson(this);
 }
 
@@ -27,7 +34,8 @@ class InfoDto {
 
   InfoDto(this.dateEnd, this.description, this.title);
 
-  factory InfoDto.fromJson(Map<String, dynamic> json) => _$InfoDtoFromJson(json);
+  factory InfoDto.fromJson(Map<String, dynamic> json) =>
+      _$InfoDtoFromJson(json);
   Map<String, dynamic> toJson() => _$InfoDtoToJson(this);
 }
 
@@ -37,6 +45,7 @@ class GamesDto {
 
   GamesDto(this.status);
 
-  factory GamesDto.fromJson(Map<String, dynamic> json) => _$GamesDtoFromJson(json);
+  factory GamesDto.fromJson(Map<String, dynamic> json) =>
+      _$GamesDtoFromJson(json);
   Map<String, dynamic> toJson() => _$GamesDtoToJson(this);
 }
