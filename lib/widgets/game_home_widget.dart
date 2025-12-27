@@ -16,7 +16,10 @@ class GameHomeWidget extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TournamentInfoPage(roomId: gameDetails.id),
+            builder: (context) => TournamentInfoPage(
+              roomId: gameDetails.id,
+              userRole: gameDetails.role,
+            ),
           ),
         );
       },

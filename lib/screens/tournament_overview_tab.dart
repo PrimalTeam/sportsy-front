@@ -54,7 +54,7 @@ class TournamentOverviewTab extends StatelessWidget {
             ),
             const SizedBox(height: 8.0),
             Text(
-              tournament.info.dateStart.toString(),
+              _formatDate(tournament.info.dateStart),
               style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
             const SizedBox(height: 24.0),
@@ -68,12 +68,17 @@ class TournamentOverviewTab extends StatelessWidget {
             ),
             const SizedBox(height: 8.0),
             Text(
-              tournament.info.dateEnd.toString(),
+              _formatDate(tournament.info.dateEnd),
               style: TextStyle(fontSize: 18.0, color: AppColors.accent),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    return '${date.year}.${twoDigits(date.month)}.${twoDigits(date.day)} ${twoDigits(date.hour)}:${twoDigits(date.minute)}';
   }
 }

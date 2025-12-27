@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
+import 'package:sportsy_front/features/tournaments/data/ladder_remote_service.dart';
+import 'package:sportsy_front/features/tournaments/data/tournaments_remote_service.dart';
 import 'package:sportsy_front/screens/room_users_screen.dart';
 import 'package:sportsy_front/screens/teams_show_page.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
-import 'package:sportsy_front/widgets/tournament_bottom_bar.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
 
 class TournamentInfoEdit extends StatefulWidget {
@@ -12,9 +13,11 @@ class TournamentInfoEdit extends StatefulWidget {
     super.key,
     required this.roomId,
     this.initialRoomInfo,
+    this.userRole = 'gameObserver',
   });
   final int roomId;
   final RoomInfoDto? initialRoomInfo;
+  final String userRole;
 
   @override
   State<TournamentInfoEdit> createState() => _TournamentInfoEditPageState();
@@ -25,7 +28,8 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
   late TabController _tabController;
   RoomInfoDto? _roomInfo;
   bool _isLoading = true;
-  String role = "admin";
+  late String role;
+  bool get _canManage => role == 'admin' || role == 'spectrator';
   final tournamentTitleController = TextEditingController();
   final tournamentDescriptionController = TextEditingController();
   final tournamentStartDateController = TextEditingController();
@@ -33,10 +37,16 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
   DateTime? _selectedDateTimeStart;
   DateTime? _selectedDateTimeEnd;
 
+  bool _autoConfigLoading = true;
+  bool _autoGenerate = false;
+  bool _updatingAuto = false;
+  String? _autoConfigError;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    role = widget.userRole.toLowerCase();
     // If the parent passed initial room info, use it to prefill fields and skip fetching.
     if (widget.initialRoomInfo != null) {
       _roomInfo = widget.initialRoomInfo;
@@ -49,6 +59,7 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
         _selectedDateTimeStart = tournament.info.dateStart;
         _selectedDateTimeEnd = tournament.info.dateEnd;
         tournamentEndDateController = tournament.info.dateEnd.toString();
+        _loadTournamentConfig(tournament.id);
       }
     } else {
       _initializeData();
@@ -63,6 +74,9 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
         _roomInfo = roomInfo;
         _isLoading = false;
       });
+      if (roomInfo.tournament != null) {
+        _loadTournamentConfig(roomInfo.tournament!.id);
+      }
     } catch (e) {
       print("Error fetching room info: $e");
       setState(() {
@@ -137,10 +151,8 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    Center(child: TeamsShowPage(roomId: widget.roomId)),
-                    Center(
-                      child: RoomUsersScreen(roomId: widget.roomId, role: role),
-                    ),
+                    TeamsShowPage(roomId: widget.roomId, canManage: _canManage),
+                    RoomUsersScreen(roomId: widget.roomId, role: role),
                   ],
                 ),
               ),
@@ -175,6 +187,7 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
 
             TextField(
               controller: tournamentDescriptionController,
+              maxLines: null,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.description),
                 hintText: 'Description',
@@ -197,7 +210,7 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
                 hintText:
                     _selectedDateTimeStart == null
                         ? 'Start date and time'
-                        : '${_selectedDateTimeStart!.toLocal()}'.split('.')[0],
+                        : _formatDate(_selectedDateTimeStart!),
               ),
             ),
             SizedBox(height: 15),
@@ -218,14 +231,169 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
                 hintText:
                     _selectedDateTimeEnd == null
                         ? 'End date and time'
-                        : '${_selectedDateTimeEnd!.toLocal()}'.split('.')[0],
+                        : _formatDate(_selectedDateTimeEnd!),
               ),
             ),
+            SizedBox(height: 15),
+            _buildAutoGenerateToggle(),
             SizedBox(height: 15),
             ElevatedButton(onPressed: () {}, child: Text("Save Changes")),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _loadTournamentConfig(int tournamentId) async {
+    try {
+      final tournament = await TournamentsRemoteService.getTournament(
+        roomId: widget.roomId,
+        tournamentId: tournamentId,
+        includes: const [],
+      );
+      if (!mounted) return;
+      setState(() {
+        _autoGenerate =
+            tournament.internalConfig?.autogenerateGamesFromLadder ?? false;
+        _autoConfigLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _autoConfigError = e.toString();
+        _autoConfigLoading = false;
+      });
+    }
+  }
+
+  Future<void> _updateAutoGenerate(bool value) async {
+    final tournamentId = _roomInfo?.tournament?.id;
+    if (tournamentId == null) return;
+
+    setState(() {
+      _updatingAuto = true;
+      _autoGenerate = value;
+      _autoConfigError = null;
+    });
+
+    try {
+      await TournamentsRemoteService.updateAutogenerateConfig(
+        roomId: widget.roomId,
+        tournamentId: tournamentId,
+        autogenerate: value,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            value
+                ? 'Automatic bracket progression enabled'
+                : 'Automatic bracket progression disabled',
+          ),
+        ),
+      );
+
+      if (value) {
+        try {
+          await LadderRemoteService.updateLadder(roomId: widget.roomId);
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to sync bracket: $e')),
+          );
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _autoGenerate = !value;
+        _autoConfigError = e.toString();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update setting: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _updatingAuto = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildAutoGenerateToggle() {
+    if (_roomInfo?.tournament == null) {
+      return const SizedBox.shrink();
+    }
+
+    if (_autoConfigLoading) {
+      return Row(
+        children: const [
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Loading bracket settings…',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.accent.withOpacity(0.25)),
+          ),
+          child: SwitchListTile.adaptive(
+            value: _autoGenerate,
+            onChanged:
+                _updatingAuto
+                    ? null
+                    : (value) {
+                      _updateAutoGenerate(value);
+                    },
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            activeColor: AppColors.accent,
+            title: const Text(
+              'Automatic bracket pairings',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              'Let the backend assign teams for upcoming matches based on '
+              'ladder progression.',
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+          ),
+        ),
+        if (_updatingAuto)
+          const Padding(
+            padding: EdgeInsets.only(top: 8),
+            child: LinearProgressIndicator(minHeight: 2),
+          ),
+        if (_autoConfigError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              _autoConfigError!,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+            ),
+          ),
+      ],
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    return '${date.year}.${twoDigits(date.month)}.${twoDigits(date.day)} ${twoDigits(date.hour)}:${twoDigits(date.minute)}';
   }
 }

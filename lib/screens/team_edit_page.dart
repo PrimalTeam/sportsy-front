@@ -100,12 +100,62 @@ class _TeamEditPageState extends State<TeamEditPage> {
     }
   }
 
+  Future<void> _deleteTeam() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Team'),
+        content: const Text('Are you sure you want to delete this team?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _saving = true);
+    try {
+      // Check if team has games
+      final details = await TeamsRemoteService.getTeamDetails(
+        roomId: widget.roomId,
+        teamId: widget.team.id,
+      );
+
+      if (details.games.isNotEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cannot delete team that has created games')),
+        );
+        return;
+      }
+
+      await TeamsRemoteService.deleteTeam(widget.roomId, widget.team.id);
+      if (!mounted) return;
+      Navigator.pop(context, true); // Return true to reload list
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete team: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: const Text('Edit Team'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.redAccent),
+            onPressed: _saving ? null : _deleteTeam,
+          ),
+        ],
       ),
       backgroundColor: AppColors.background,
       body: Padding(

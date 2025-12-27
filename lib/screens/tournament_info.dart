@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
@@ -12,14 +13,19 @@ import 'package:sportsy_front/widgets/games_tab.dart';
 import 'package:sportsy_front/widgets/tournament_bottom_bar.dart';
 import 'package:sportsy_front/dto/room_info_dto.dart';
 import 'package:sportsy_front/dto/get_teams_dto.dart';
-import 'package:sportsy_front/dto/get_tournament_dto.dart';
 import 'package:sportsy_front/screens/tournament_info_edit_page.dart';
 import 'package:sportsy_front/screens/tournament_overview_tab.dart';
 import 'package:sportsy_front/screens/games_page.dart';
+import 'package:sportsy_front/screens/tournament_bracket_page.dart';
 
 class TournamentInfoPage extends StatefulWidget {
-  const TournamentInfoPage({super.key, required this.roomId});
+  const TournamentInfoPage({
+    super.key,
+    required this.roomId,
+    this.userRole = 'gameObserver',
+  });
   final int roomId;
+  final String userRole;
 
   @override
   State<TournamentInfoPage> createState() => _TournamentInfoPageState();
@@ -27,21 +33,57 @@ class TournamentInfoPage extends StatefulWidget {
 
 class _TournamentInfoPageState extends State<TournamentInfoPage>
     with SingleTickerProviderStateMixin {
+  static const String _tabInfo = 'info';
+  static const String _tabGames = 'games';
+  static const String _tabTeams = 'teams';
+  static const String _tabUsers = 'users';
+  static const String _tabBracket = 'bracket';
+
   late TabController _tabController;
   RoomInfoDto? _roomInfo;
   bool _isLoading = true;
-  String role = "admin";
+  late String _role;
+  late List<String> _tabOrder;
   final GlobalKey<TeamsShowPageState> _teamsKey =
       GlobalKey<TeamsShowPageState>();
   final GlobalKey<GamesTabState> _gamesTabKey = GlobalKey<GamesTabState>();
   Set<int> _tournamentTeamIds = {};
   List<GetTeamsDto> _tournamentTeams = [];
 
+  bool get _isAdmin => _role == 'admin';
+  bool get _isSpectator => _role == 'spectrator';
+  bool get _canManageContent => _isAdmin || _isSpectator;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _role = widget.userRole.toLowerCase();
+    _tabOrder = _buildTabOrder(_role);
+    _tabController = TabController(length: _tabOrder.length, vsync: this);
     _initializeData();
+  }
+
+  @override
+  void didUpdateWidget(TournamentInfoPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userRole != widget.userRole) {
+      final newRole = widget.userRole.toLowerCase();
+      final newOrder = _buildTabOrder(newRole);
+      setState(() {
+        _role = newRole;
+        if (!listEquals(newOrder, _tabOrder)) {
+          _tabOrder = newOrder;
+          _tabController.dispose();
+          _tabController = TabController(length: _tabOrder.length, vsync: this);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _initializeData() async {
@@ -68,6 +110,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
   }
 
   void _openAddTeamSheet() {
+    if (!_canManageContent) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -212,32 +255,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
                 },
                 child: TabBarView(
                   controller: _tabController,
-                  children: [
-                    if (_roomInfo?.tournament != null)
-                      TournamentOverviewTab(tournament: _roomInfo!.tournament!)
-                    else
-                      Center(
-                        child: Text(
-                          'No data available',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    GamesTab(
-                      key: _gamesTabKey,
-                      roomId: widget.roomId,
-                      tournamentId: _roomInfo?.tournament?.id,
-                    ),
-                    Center(
-                      child: TeamsShowPage(
-                        key: _teamsKey,
-                        roomId: widget.roomId,
-                      ),
-                    ),
-                    Center(
-                      child: RoomUsersScreen(roomId: widget.roomId, role: role),
-                    ),
-                    _LeaderboardPlaceholder(tournament: _roomInfo?.tournament),
-                  ],
+                  children: _tabOrder.map(_buildTabContent).toList(),
                 ),
               ),
       bottomNavigationBar: Material(
@@ -245,6 +263,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
         child: buildTournamentBottomBar(
           context: context,
           tabController: _tabController,
+          tabs: _tabOrder.map(_tabFor).toList(),
           onTabSelected: (index) {
             setState(() {
               _tabController.animateTo(index);
@@ -253,89 +272,133 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
         ),
       ),
 
-      floatingActionButton:
-          !_isLoading
-              ? (_tabController.index == 0 && _roomInfo?.tournament != null)
-                  ? FloatingActionButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (context) => TournamentInfoEdit(
-                                roomId: widget.roomId,
-                                initialRoomInfo: _roomInfo,
-                              ),
-                        ),
-                      );
-                    },
-                    backgroundColor: AppColors.accent,
-                    child: const Icon(Icons.edit),
-                  )
-                  : (_tabController.index == 1 && _roomInfo?.tournament != null)
-                  ? FloatingActionButton(
-                    onPressed: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (context) => GamesPage(
-                                roomId: widget.roomId,
-                                tournamentId: _roomInfo?.tournament?.id,
-                                allowedTeamIds:
-                                    _tournamentTeamIds.isEmpty
-                                        ? null
-                                        : _tournamentTeamIds.toList(),
-                              ),
-                        ),
-                      );
-                      _gamesTabKey.currentState?.reloadGames();
-                    },
-                    backgroundColor: AppColors.accent,
-                    child: const Icon(Icons.add),
-                  )
-                  : (_tabController.index == 2)
-                  ? FloatingActionButton(
-                    onPressed: _openAddTeamSheet,
-                    backgroundColor: AppColors.accent,
-                    child: const Icon(Icons.group_add),
-                  )
-                  : null
-              : null,
+      floatingActionButton: _buildFloatingActionButton(),
     );
   }
-}
 
-class _LeaderboardPlaceholder extends StatelessWidget {
-  const _LeaderboardPlaceholder({this.tournament});
-
-  final GetTournamentDto? tournament;
-
-  @override
-  Widget build(BuildContext context) {
-    if (tournament == null) {
-      return const Center(
-        child: Text(
-          'Leaderboard not available yet',
-          style: TextStyle(color: Colors.white70),
-        ),
-      );
+  List<String> _buildTabOrder(String role) {
+    final base = <String>[
+      _tabInfo,
+      _tabGames,
+      _tabTeams,
+      _tabUsers,
+      _tabBracket,
+    ];
+    if (role == 'gameobserver') {
+      base.remove(_tabUsers);
     }
+    return base;
+  }
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.leaderboard, color: AppColors.accent, size: 48),
-            const SizedBox(height: 12),
-            const Text(
-              'Leaderboard view is coming soon.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70),
-            ),
-          ],
-        ),
-      ),
-    );
+  Tab _tabFor(String id) {
+    switch (id) {
+      case _tabInfo:
+        return const Tab(icon: Icon(Icons.info), text: 'INFO');
+      case _tabGames:
+        return const Tab(icon: Icon(Icons.sports_esports), text: 'GAMES');
+      case _tabTeams:
+        return const Tab(icon: Icon(Icons.groups), text: 'TEAMS');
+      case _tabUsers:
+        return const Tab(icon: Icon(Icons.people), text: 'USERS');
+      case _tabBracket:
+        return const Tab(icon: Icon(Icons.leaderboard), text: 'BRACKET');
+      default:
+        return const Tab(icon: Icon(Icons.help_outline), text: 'UNKNOWN');
+    }
+  }
+
+  Widget _buildTabContent(String id) {
+    switch (id) {
+      case _tabInfo:
+        if (_roomInfo?.tournament != null) {
+          return TournamentOverviewTab(tournament: _roomInfo!.tournament!);
+        }
+        return const Center(
+          child: Text(
+            'No data available',
+            style: TextStyle(color: Colors.white),
+          ),
+        );
+      case _tabGames:
+        return GamesTab(
+          key: _gamesTabKey,
+          roomId: widget.roomId,
+          tournamentId: _roomInfo?.tournament?.id,
+        );
+      case _tabTeams:
+        return TeamsShowPage(
+          key: _teamsKey,
+          roomId: widget.roomId,
+          canManage: _canManageContent,
+        );
+      case _tabUsers:
+        return RoomUsersScreen(roomId: widget.roomId, role: _role);
+      case _tabBracket:
+        return TournamentBracketPage(
+          roomId: widget.roomId,
+          tournamentId: _roomInfo?.tournament?.id,
+          userRole: _role,
+        );
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget? _buildFloatingActionButton() {
+    if (_isLoading) return null;
+    if (!_canManageContent) return null;
+    if (_tabOrder.isEmpty) return null;
+
+    final currentTab = _tabOrder[_tabController.index];
+    switch (currentTab) {
+      case _tabInfo:
+        if (_roomInfo?.tournament == null) return null;
+        return FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder:
+                    (context) => TournamentInfoEdit(
+                      roomId: widget.roomId,
+                      initialRoomInfo: _roomInfo,
+                      userRole: _role,
+                    ),
+              ),
+            );
+          },
+          backgroundColor: AppColors.accent,
+          child: const Icon(Icons.edit),
+        );
+      case _tabGames:
+        if (_roomInfo?.tournament == null) return null;
+        return FloatingActionButton(
+          onPressed: () async {
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder:
+                    (context) => GamesPage(
+                      roomId: widget.roomId,
+                      tournamentId: _roomInfo?.tournament?.id,
+                      allowedTeamIds:
+                          _tournamentTeamIds.isEmpty
+                              ? null
+                              : _tournamentTeamIds.toList(),
+                    ),
+              ),
+            );
+            _gamesTabKey.currentState?.reloadGames();
+          },
+          backgroundColor: AppColors.accent,
+          child: const Icon(Icons.add),
+        );
+      case _tabTeams:
+        return FloatingActionButton(
+          onPressed: _openAddTeamSheet,
+          backgroundColor: AppColors.accent,
+          child: const Icon(Icons.group_add),
+        );
+      default:
+        return null;
+    }
   }
 }

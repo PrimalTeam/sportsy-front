@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sportsy_front/custom_colors.dart';
+import 'package:sportsy_front/screens/auth_gate.dart';
 import 'package:sportsy_front/screens/tournament_info_edit_page.dart';
 import 'screens/tournaments_screen.dart';
 import 'screens/login_screen.dart';
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      home: const AuthGate(),
       theme: ThemeData(
         appBarTheme: AppBarTheme(
           iconTheme: IconThemeData(color: AppColors.accent),
@@ -83,7 +84,7 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => const MyHomePage(title: "Title"),
+        '/home': (context) => const MyHomePage(title: 'Sportsy'),
         '/tournament_edit': (context) {
           final args = ModalRoute.of(context)!.settings.arguments;
           final id = args is int ? args : 0;

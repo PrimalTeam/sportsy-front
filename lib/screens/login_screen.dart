@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
-import 'package:sportsy_front/screens/tournaments_screen.dart';
 import 'package:sportsy_front/screens/register_screen.dart';
 import 'package:sportsy_front/features/auth/data/auth_remote_service.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -35,13 +34,9 @@ class LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return;
       if (response.statusCode == 201) {
-        Navigator.pushAndRemoveUntil(
+        Navigator.of(
           context,
-          MaterialPageRoute(
-            builder: (context) => MyHomePage(title: "homePage"),
-          ),
-          (Route<dynamic> route) => false,
-        );
+        ).pushNamedAndRemoveUntil('/home', (route) => false);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Nieprawidłowe dane logowania")),

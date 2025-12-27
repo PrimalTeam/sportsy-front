@@ -5,27 +5,35 @@ import 'package:sportsy_front/dto/room_user_role_enum.dart';
 import 'package:sportsy_front/features/room_users/data/room_users_remote_service.dart';
 
 class RoomUserEditPage extends StatefulWidget {
-  const RoomUserEditPage({super.key, required this.roomId, required this.user});
+  const RoomUserEditPage({
+    super.key,
+    required this.roomId,
+    required this.user,
+    required this.currentUserRole,
+  });
   final int roomId;
   final GetRoomUsersDto user;
+  final String currentUserRole;
 
   @override
   State<RoomUserEditPage> createState() => _RoomUserEditPageState();
 }
 
 class _RoomUserEditPageState extends State<RoomUserEditPage> {
-  // Only rola ma być edytowalna.
   late RoomUserRoleEnum _roleEnum;
+  late RoomUserRoleEnum _initialRole;
+  late List<RoomUserRoleEnum> _availableRoles;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    // Map incoming string role to enum; default to spectrator if unknown.
-    _roleEnum = RoomUserRoleEnum.values.firstWhere(
-      (e) => e.name == widget.user.role,
-      orElse: () => RoomUserRoleEnum.spectrator,
-    );
+    _initialRole = RoomUserRoleEnumX.fromString(widget.user.role);
+    _roleEnum = _initialRole;
+    _availableRoles = _computeAvailableRoles();
+    if (!_availableRoles.contains(_roleEnum)) {
+      _availableRoles = [_roleEnum, ..._availableRoles];
+    }
   }
 
   @override
@@ -33,7 +41,35 @@ class _RoomUserEditPageState extends State<RoomUserEditPage> {
     super.dispose();
   }
 
+  List<RoomUserRoleEnum> _computeAvailableRoles() {
+    final viewerRole = widget.currentUserRole.toLowerCase();
+    if (viewerRole == 'admin') {
+      return RoomUserRoleEnum.values;
+    }
+    if (viewerRole == 'spectrator') {
+      return const [RoomUserRoleEnum.gameObserver];
+    }
+    return const [];
+  }
+
+  bool _canSelectRole(RoomUserRoleEnum role) {
+    final viewerRole = widget.currentUserRole.toLowerCase();
+    if (viewerRole == 'admin') {
+      return true;
+    }
+    if (viewerRole == 'spectrator') {
+      return role == RoomUserRoleEnum.gameObserver;
+    }
+    return false;
+  }
+
   Future<void> _save() async {
+    if (!_canSelectRole(_roleEnum) && _roleEnum != _initialRole) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You do not have permission for this role.')),
+      );
+      return;
+    }
     setState(() => _saving = true);
     try {
       // Przekazujemy niezmienione identyfikatory (backend może ich wymagać) – używamy username z dto.
@@ -80,15 +116,28 @@ class _RoomUserEditPageState extends State<RoomUserEditPage> {
             DropdownButtonFormField<RoomUserRoleEnum>(
               value: _roleEnum,
               items:
-                  RoomUserRoleEnum.values
+                  _availableRoles
                       .map(
                         (e) => DropdownMenuItem(
                           value: e,
-                          child: Text(e.displayName),
+                          enabled: _canSelectRole(e),
+                          child: Text(
+                            e.displayName,
+                            style: TextStyle(
+                              color:
+                                  _canSelectRole(e)
+                                      ? Colors.white
+                                      : Colors.white38,
+                            ),
+                          ),
                         ),
                       )
                       .toList(),
-              onChanged: (v) => setState(() => _roleEnum = v ?? _roleEnum),
+              onChanged: (v) {
+                if (v == null) return;
+                if (!_canSelectRole(v)) return;
+                setState(() => _roleEnum = v);
+              },
               dropdownColor: Colors.black,
               style: const TextStyle(color: Colors.white),
             ),

@@ -9,9 +9,10 @@ import 'package:sportsy_front/screens/team_details_page.dart';
 enum _TeamsViewStatus { loading, error, empty, data }
 
 class TeamsShowPage extends StatefulWidget {
-  const TeamsShowPage({super.key, required this.roomId});
+  const TeamsShowPage({super.key, required this.roomId, this.canManage = true});
 
   final int roomId;
+  final bool canManage;
 
   @override
   TeamsShowPageState createState() => TeamsShowPageState();
@@ -86,7 +87,8 @@ class TeamsShowPageState extends State<TeamsShowPage> {
               final team = _teams[index];
               return TeamCard(
                 team: team,
-                onEdit: () => _openTeamEditor(team),
+                canManage: widget.canManage,
+                onEdit: widget.canManage ? () => _openTeamEditor(team) : null,
                 onInfo: () => _openTeamInfo(team),
               );
             },
@@ -161,16 +163,24 @@ class _TeamsMessageView extends StatelessWidget {
 }
 
 class TeamCard extends StatelessWidget {
-  const TeamCard({required this.team, this.onEdit, this.onInfo, super.key});
+  const TeamCard({
+    required this.team,
+    required this.canManage,
+    this.onEdit,
+    this.onInfo,
+    super.key,
+  });
 
   final GetTeamsDto team;
+  final bool canManage;
   final VoidCallback? onEdit;
   final VoidCallback? onInfo;
 
   @override
   Widget build(BuildContext context) {
+    final tapHandler = canManage ? onEdit : onInfo;
     return InkWell(
-      onTap: onEdit,
+      onTap: tapHandler,
       borderRadius: BorderRadius.circular(16),
       child: Ink(
         decoration: BoxDecoration(
@@ -204,11 +214,12 @@ class TeamCard extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.accent),
-                  tooltip: 'Edit team',
-                  onPressed: onEdit,
-                ),
+                if (canManage)
+                  IconButton(
+                    icon: const Icon(Icons.edit, color: AppColors.accent),
+                    tooltip: 'Edit team',
+                    onPressed: onEdit,
+                  ),
                 IconButton(
                   icon: const Icon(Icons.info_outline, color: AppColors.accent),
                   tooltip: 'View team info',

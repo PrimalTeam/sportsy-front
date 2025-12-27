@@ -4,6 +4,8 @@ import 'package:sportsy_front/dto/game_create_dto.dart';
 import 'package:sportsy_front/dto/get_teams_dto.dart';
 import 'package:sportsy_front/features/games/data/games_remote_service.dart';
 import 'package:sportsy_front/features/teams/data/teams_remote_service.dart';
+import 'package:sportsy_front/features/tournaments/data/ladder_remote_service.dart';
+import 'package:sportsy_front/features/tournaments/data/tournaments_remote_service.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
 
 class GamesPage extends StatefulWidget {
@@ -410,7 +412,7 @@ class TeamSelectionTile extends StatelessWidget {
             hasImage
                 ? ClipOval(
                   child: Image.memory(
-                    bytes!,
+                    bytes,
                     width: 40,
                     height: 40,
                     fit: BoxFit.cover,

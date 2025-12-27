@@ -7,10 +7,18 @@ import 'package:sportsy_front/features/room_users/data/room_users_remote_service
 Future<void> addUserToRoomWidget({
   required BuildContext context,
   required int roomId,
+  required String currentUserRole,
   required VoidCallback onUserAdded,
 }) {
   final TextEditingController emailTextController = TextEditingController();
-  String selectedRole = "";
+  final availableRoles = _availableRolesFor(currentUserRole);
+  if (availableRoles.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('You do not have permission to add users.')),
+    );
+    return Future.value();
+  }
+  String selectedRole = availableRoles.first.name;
   void addUserToRoom() async {
     await RoomUsersRemoteService.addUserToRoom(
       roomId,
@@ -70,39 +78,20 @@ Future<void> addUserToRoomWidget({
 
                       TextField(controller: emailTextController),
                       SizedBox(height: 10),
-                      RadioListTile(
-                        title: const Text(
-                          "Role Spectator",
-                          style: TextStyle(color: Colors.white),
+                      ...availableRoles.map(
+                        (role) => RadioListTile(
+                          title: Text(
+                            'Role ${role.displayName}',
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          value: role.name,
+                          groupValue: selectedRole,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedRole = value!;
+                            });
+                          },
                         ),
-                        value:
-                            RoomUserRoleEnum
-                                .spectrator
-                                .name, // Wartość dla tego przycisku
-                        groupValue: selectedRole, // Aktualnie wybrana wartość
-                        onChanged: (value) {
-                          setState(() {
-                            selectedRole =
-                                value!; // Aktualizacja wybranej wartości
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: const Text(
-                          "Role Game Observer",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        value:
-                            RoomUserRoleEnum
-                                .gameObserver
-                                .name, // Wartość dla tego przycisku
-                        groupValue: selectedRole, // Aktualnie wybrana wartość
-                        onChanged: (value) {
-                          setState(() {
-                            selectedRole =
-                                value!; // Aktualizacja wybranej wartości
-                          });
-                        },
                       ),
                       SizedBox(height: 10),
 
@@ -118,4 +107,19 @@ Future<void> addUserToRoomWidget({
               ),
         ),
   );
+}
+
+List<RoomUserRoleEnum> _availableRolesFor(String currentRole) {
+  final normalized = currentRole.toLowerCase();
+  if (normalized == 'admin') {
+    return const [
+      RoomUserRoleEnum.spectrator,
+      RoomUserRoleEnum.gameObserver,
+      RoomUserRoleEnum.admin,
+    ];
+  }
+  if (normalized == 'spectrator') {
+    return const [RoomUserRoleEnum.gameObserver];
+  }
+  return const [];
 }

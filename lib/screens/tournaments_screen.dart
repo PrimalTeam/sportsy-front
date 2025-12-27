@@ -4,7 +4,6 @@ import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
 import 'package:sportsy_front/screens/create_tournament_screen.dart';
 import 'package:sportsy_front/core/auth/jwt_storage_service.dart';
 import 'package:sportsy_front/screens/user_profile_page.dart';
-import '../widgets/app_bar.dart';
 import '../widgets/game_home_widget.dart';
 import '../widgets/bottom_bar_home.dart';
 
@@ -130,13 +129,6 @@ class _MyHomePageState extends State<MyHomePage> {
             .toList();
 
     return Scaffold(
-      appBar:
-          _selectedIndex == 2
-              ? AppBar(
-                title: const Text('Profile'),
-                automaticallyImplyLeading: false,
-              )
-              : MyAppBar(title: 'Games list'),
       body:
           _selectedIndex == 2
               ? _buildProfileBody()

@@ -1,1 +1,4 @@
-const String baseApiUrl = 'http://34.57.50.103:3000';
+//const String baseApiUrl = 'https://civisafe.online';
+// Localhost for testing
+
+const String baseApiUrl = "https://civisafe.online";

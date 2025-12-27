@@ -127,6 +127,11 @@ class _TournamentFormState extends State<TournamentForm> {
     }
   }
 
+  String _formatDate(DateTime date) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    return '${date.year}.${twoDigits(date.month)}.${twoDigits(date.day)} ${twoDigits(date.hour)}:${twoDigits(date.minute)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -185,7 +190,7 @@ class _TournamentFormState extends State<TournamentForm> {
             hintText:
                 _selectedDateTimeStart == null
                     ? 'Start date and time'
-                    : '${_selectedDateTimeStart!.toLocal()}'.split('.')[0],
+                    : _formatDate(_selectedDateTimeStart!),
           ),
         ),
         SizedBox(height: 15),
@@ -206,7 +211,7 @@ class _TournamentFormState extends State<TournamentForm> {
             hintText:
                 _selectedDateTimeEnd == null
                     ? 'End date and time'
-                    : '${_selectedDateTimeEnd!.toLocal()}'.split('.')[0],
+                    : _formatDate(_selectedDateTimeEnd!),
           ),
         ),
         SizedBox(height: 15),

@@ -6,6 +6,7 @@ import 'package:sportsy_front/custom_colors.dart';
 Widget buildTournamentBottomBar({
   required BuildContext context,
   required TabController tabController,
+  required List<Tab> tabs,
   required ValueChanged<int> onTabSelected,
 }) {
   return SafeArea(
@@ -27,13 +28,7 @@ Widget buildTournamentBottomBar({
           indicator: const BoxDecoration(),
           labelColor: AppColors.accent,
           unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(icon: Icon(Icons.info), text: 'INFO'),
-            Tab(icon: Icon(Icons.sports_esports), text: 'GAMES'),
-            Tab(icon: Icon(Icons.groups), text: 'TEAMS'),
-            Tab(icon: Icon(Icons.people), text: 'USERS'),
-            Tab(icon: Icon(Icons.leaderboard), text: 'LEADER'),
-          ],
+          tabs: tabs,
           onTap: onTabSelected, // tylko callback
         ),
       ),

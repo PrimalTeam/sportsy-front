@@ -77,4 +77,12 @@ class TeamsRemoteService {
       throw Exception('Failed to fetch team details: ${e.response?.data}');
     }
   }
+
+  static Future<void> deleteTeam(int roomId, int teamId) async {
+    try {
+      await _dio.delete('/team/$roomId/$teamId');
+    } on DioException catch (e) {
+      throw Exception('Failed to delete team: ${e.response?.data}');
+    }
+  }
 }

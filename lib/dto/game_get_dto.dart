@@ -10,6 +10,14 @@ class GameTeamStatusSummary {
     required this.score,
     this.teamName,
   });
+
+  GameTeamStatusSummary copyWith({int? teamId, int? score, String? teamName}) {
+    return GameTeamStatusSummary(
+      teamId: teamId ?? this.teamId,
+      score: score ?? this.score,
+      teamName: teamName ?? this.teamName,
+    );
+  }
 }
 
 class GameGetDto {
@@ -32,6 +40,27 @@ class GameGetDto {
     required this.teamStatuses,
     required this.teams,
   });
+
+  GameGetDto copyWith({
+    String? status,
+    DateTime? dateStart,
+    String? durationTime,
+    int? tournamentId,
+    List<int>? teamIds,
+    List<GameTeamStatusSummary>? teamStatuses,
+    List<GetTeamsDto>? teams,
+  }) {
+    return GameGetDto(
+      id: id,
+      status: status ?? this.status,
+      dateStart: dateStart ?? this.dateStart,
+      durationTime: durationTime ?? this.durationTime,
+      tournamentId: tournamentId ?? this.tournamentId,
+      teamIds: teamIds ?? this.teamIds,
+      teamStatuses: teamStatuses ?? this.teamStatuses,
+      teams: teams ?? this.teams,
+    );
+  }
 
   factory GameGetDto.fromJson(Map<String, dynamic> json) {
     final rawTeams = json['teams'];
@@ -105,19 +134,20 @@ class GameGetDto {
 
   static GetTeamsDto? _parseTeam(dynamic entry, dynamic fallbackTournamentId) {
     if (entry is Map<String, dynamic>) {
-      Map<String, dynamic>? source;
-      if (entry['team'] is Map<String, dynamic>) {
-        source = Map<String, dynamic>.from(
-          entry['team'] as Map<String, dynamic>,
-        );
-      } else {
-        source = Map<String, dynamic>.from(entry);
-      }
-      final id = _asInt(source['id']);
-      final name = source['name'] as String?;
-      if (id == null || name == null) {
+      // Backend may return team data directly or wrapped in 'team' key
+      final Map<String, dynamic> source =
+          entry['team'] is Map<String, dynamic>
+              ? Map<String, dynamic>.from(entry['team'] as Map<String, dynamic>)
+              : Map<String, dynamic>.from(entry);
+
+      // Try multiple common id/name field patterns
+      final id = _asInt(source['id']) ?? _asInt(source['teamId']);
+      final name = source['name'] as String? ?? source['teamName'] as String?;
+
+      if (id == null || name == null || name.isEmpty) {
         return null;
       }
+
       int? tournamentId = _asInt(source['tournamentId']);
       tournamentId ??= _asInt(entry['tournamentId']);
       tournamentId ??= _asInt(fallbackTournamentId);
