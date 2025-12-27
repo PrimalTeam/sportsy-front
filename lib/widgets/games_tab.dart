@@ -1,286 +1,299 @@
+import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
-import 'package:sportsy_front/dto/get_teams_dto.dart';
 import 'package:sportsy_front/custom_colors.dart';
-import 'package:sportsy_front/dto/game_create_dto.dart';
+import 'package:sportsy_front/dto/game_get_dto.dart';
+import 'package:sportsy_front/dto/get_teams_dto.dart';
+import 'package:sportsy_front/features/games/data/games_remote_service.dart';
+import 'package:sportsy_front/features/games/data/game_websocket_service.dart';
+import 'package:sportsy_front/features/games/data/game_websocket_events.dart';
+import 'package:sportsy_front/screens/game_edit_screen.dart';
+
+class TeamDisplayInfo {
+  final String name;
+  final String score;
+  final Uint8List? icon;
+  TeamDisplayInfo(this.name, this.score, this.icon);
+}
 
 class GamesTab extends StatefulWidget {
   final int roomId;
   final int? tournamentId;
-  final List<int>? allowedTeamIds;
-  final List<GetTeamsDto>? initialTeams;
-  const GamesTab({
-    super.key,
-    required this.roomId,
-    required this.tournamentId,
-    this.allowedTeamIds,
-    this.initialTeams,
-  });
+  const GamesTab({super.key, required this.roomId, required this.tournamentId});
 
   @override
-  State<GamesTab> createState() => _GamesTabState();
+  GamesTabState createState() => GamesTabState();
 }
 
-class _GamesTabState extends State<GamesTab> {
-  List<GetTeamsDto> _teams = [];
+class GamesTabState extends State<GamesTab> {
+  List<GameGetDto> _games = [];
   bool _loading = true;
   bool _error = false;
-  Set<int> _allowedTeamIds = {};
 
-  int? _selectedLeft;
-  int? _selectedRight;
-
-  DateTime _dateStart = DateTime.now();
-  Duration _duration = const Duration(hours: 1, minutes: 30);
+  // WebSocket
+  final GameWebSocketService _webSocket = GameWebSocketService();
+  final List<StreamSubscription> _subscriptions = [];
 
   @override
   void initState() {
     super.initState();
-    if (widget.allowedTeamIds != null && widget.allowedTeamIds!.isNotEmpty) {
-      _allowedTeamIds = widget.allowedTeamIds!.toSet();
-    }
-    if (widget.initialTeams != null && widget.initialTeams!.isNotEmpty) {
-      _teams = List<GetTeamsDto>.from(widget.initialTeams!);
-      _allowedTeamIds = _teams.map((t) => t.id).toSet();
-      _loading = false;
-    }
-    _loadTeams();
+    _loadGames();
+    _initWebSocket();
   }
 
-  Future<void> _loadTeams() async {
-    if (widget.tournamentId == null) {
-      setState(() { _loading = false; _error = true; });
+  @override
+  void dispose() {
+    _disposeWebSocket();
+    super.dispose();
+  }
+
+  Future<void> _initWebSocket() async {
+    if (widget.tournamentId == null) return;
+
+    _subscriptions.add(
+      _webSocket.onGameCreated.listen(_handleGameCreated),
+    );
+    _subscriptions.add(
+      _webSocket.onGameUpdated.listen(_handleGameUpdated),
+    );
+    _subscriptions.add(
+      _webSocket.onGameDeleted.listen(_handleGameDeleted),
+    );
+    _subscriptions.add(
+      _webSocket.onConnectionStateChanged.listen((connected) {
+        if (mounted) {
+          setState(() {});
+        }
+      }),
+    );
+
+    try {
+      await _webSocket.connect();
+      final response = await _webSocket.joinTournament(
+        roomId: widget.roomId,
+        tournamentId: widget.tournamentId!,
+      );
+      debugPrint('WebSocket joined tournament: ${response.status}');
+    } catch (e) {
+      debugPrint('WebSocket connection error: $e');
+    }
+  }
+
+  void _disposeWebSocket() {
+    for (final sub in _subscriptions) {
+      sub.cancel();
+    }
+    _subscriptions.clear();
+    // Leave tournament but don't disconnect singleton
+    if (_webSocket.isSubscribedToTournament) {
+      _webSocket.leaveTournament();
+    }
+  }
+
+  void _handleGameCreated(GameCreatedEvent event) {
+    if (!mounted) return;
+    // Reload to get full game details
+    _loadGames();
+  }
+
+  void _handleGameUpdated(GameUpdatedEvent event) {
+    if (!mounted) return;
+    final gameId = event.gameId;
+    if (gameId == null) {
+      _loadGames();
       return;
     }
+
+    // Update the specific game in the list
+    _updateGameById(gameId);
+  }
+
+  void _handleGameDeleted(GameDeletedEvent event) {
+    if (!mounted) return;
+    setState(() {
+      _games.removeWhere((g) => g.id == event.gameId);
+    });
+  }
+
+  Future<void> _updateGameById(int gameId) async {
     try {
-      final rawTeams = await AuthService.getTeamsOfTournament(widget.tournamentId!);
-      List<GetTeamsDto> teams;
-      if (_allowedTeamIds.isNotEmpty) {
-        final filtered = rawTeams.where((team) => _allowedTeamIds.contains(team.id)).toList(growable: false);
-        if (filtered.isNotEmpty) {
-          teams = filtered;
-          _allowedTeamIds = teams.map((t) => t.id).toSet();
-        } else {
-          debugPrint('GamesTab: no overlap between allowed IDs $_allowedTeamIds and API result (${rawTeams.length}). Keeping current list.');
-          teams = List<GetTeamsDto>.from(_teams);
-        }
-      } else {
-        final filtered = rawTeams
-            .where((team) => team.tournamentId == widget.tournamentId)
-            .toList(growable: false);
-        teams = filtered.isNotEmpty ? filtered : rawTeams;
-        _allowedTeamIds = teams.map((t) => t.id).toSet();
-        if (filtered.isEmpty) {
-          debugPrint('GamesTab: API did not provide tournament-specific teams; using full list (${teams.length}).');
-        }
-      }
+      final updatedGame = await GamesRemoteService.getGameById(
+        roomId: widget.roomId,
+        gameId: gameId,
+      );
       if (!mounted) return;
       setState(() {
-        _teams = teams;
-        _loading = false;
+        final index = _games.indexWhere((g) => g.id == gameId);
+        if (index != -1) {
+          _games[index] = updatedGame;
+        } else {
+          _games.add(updatedGame);
+        }
       });
-      debugPrint('GamesTab: loaded ${teams.length} teams, allowed IDs: $_allowedTeamIds');
+    } catch (e) {
+      debugPrint('Failed to update game $gameId: $e');
+    }
+  }
+
+  Future<void> reloadGames() => _loadGames();
+
+  Future<void> _openGameEditScreen(GameGetDto game) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (context) => GameEditScreen(roomId: widget.roomId, gameId: game.id),
+      ),
+    );
+
+    // Reload games after returning from edit screen
+    if (mounted) {
+      await _loadGames();
+    }
+  }
+
+  Future<void> _deleteGame(int gameId) async {
+    try {
+      await GamesRemoteService.deleteGame(widget.roomId, gameId);
     } catch (e) {
       if (!mounted) return;
-      setState(() { _loading = false; _error = true; });
-    }
-  }
-
-  Future<void> _pickDateTime() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _dateStart,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-    if (date != null) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_dateStart),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete game: $e')),
       );
-      if (time != null) {
-        setState(() {
-          _dateStart = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-        });
-      }
     }
   }
 
-  Future<void> _pickDuration() async {
-    final time = await showTimePicker(
+  Future<void> _deleteAllGames() async {
+    final confirm = await showDialog<bool>(
       context: context,
-      initialTime: TimeOfDay(hour: _duration.inHours, minute: _duration.inMinutes % 60),
-    );
-    if (time != null) {
-      setState(() { _duration = Duration(hours: time.hour, minutes: time.minute); });
-    }
-  }
-
-  bool get _canCreate => _selectedLeft != null && _selectedRight != null && _selectedLeft != _selectedRight;
-
-  String _teamNameById(int? id) {
-    if (id == null) return '';
-    try {
-      return _teams.firstWhere((t) => t.id == id).name;
-    } catch (_) {
-      return '';
-    }
-  }
-
-  bool _teamsBelongToTournament(List<int> ids) {
-    if (_allowedTeamIds.isEmpty) return false;
-    return ids.every(_allowedTeamIds.contains);
-  }
-
-  void _openTeamPicker(bool leftSide) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.black87,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      builder: (context) => AlertDialog(
+        title: const Text('Delete All Games'),
+        content: const Text('Are you sure you want to delete ALL games? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete All', style: TextStyle(color: Colors.red))),
+        ],
       ),
-      builder: (ctx) {
-        final TextEditingController searchController = TextEditingController();
-        List<GetTeamsDto> filtered = List.from(_teams);
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            void applyFilter() {
-              final q = searchController.text.trim().toLowerCase();
-              setSheetState(() {
-                filtered = _teams.where((t) => t.name.toLowerCase().contains(q)).toList();
-              });
-            }
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                top: 20,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          leftSide ? 'Select Team A' : 'Select Team B',
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        icon: const Icon(Icons.close, color: Colors.white54),
-                      ),
-                    ],
-                  ),
-                  TextField(
-                    controller: searchController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: 'Search team',
-                      hintStyle: TextStyle(color: Colors.white54),
-                      prefixIcon: Icon(Icons.search, color: Colors.white54),
-                    ),
-                    onChanged: (_) => applyFilter(),
-                  ),
-                  const SizedBox(height: 12),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 400),
-                    child: filtered.isEmpty
-                        ? const Center(
-                            child: Text('No teams match', style: TextStyle(color: Colors.white70)),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: filtered.length,
-                            itemBuilder: (c, i) {
-                              final team = filtered[i];
-                              final bytes = team.icon?.data;
-                              final hasImage = bytes != null && bytes.isNotEmpty;
-                              final isSelected = leftSide ? _selectedLeft == team.id : _selectedRight == team.id;
-                              return ListTile(
-                                selected: isSelected,
-                                selectedTileColor: Colors.white10,
-                                leading: hasImage
-                                    ? ClipOval(
-                                        child: Image.memory(
-                                          bytes,
-                                          width: 40,
-                                          height: 40,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (c, e, st) => CircleAvatar(
-                                            backgroundColor: Colors.grey.shade900,
-                                            child: const Icon(Icons.broken_image, color: Colors.white70),
-                                          ),
-                                        ),
-                                      )
-                                    : CircleAvatar(
-                                        backgroundColor: Colors.grey.shade900,
-                                        child: const Icon(Icons.group, color: Colors.white70),
-                                      ),
-                                title: Text(
-                                  team.name,
-                                  style: const TextStyle(color: Colors.white),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                trailing: isSelected ? const Icon(Icons.check, color: Colors.white70) : null,
-                                onTap: () {
-                                  setState(() {
-                                    if (leftSide) {
-                                      _selectedLeft = team.id;
-                                    } else {
-                                      _selectedRight = team.id;
-                                    }
-                                  });
-                                  Navigator.pop(ctx);
-                                },
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
     );
+
+    if (confirm != true) return;
+
+    final gamesToDelete = List<GameGetDto>.from(_games);
+    for (final game in gamesToDelete) {
+      try {
+        await GamesRemoteService.deleteGame(widget.roomId, game.id);
+      } catch (e) {
+        debugPrint('Failed to delete game ${game.id}: $e');
+      }
+    }
+    _loadGames();
   }
 
-  Future<void> _createGame() async {
-    if (!_canCreate || widget.tournamentId == null) return;
+  Future<void> _loadGames() async {
+    if (widget.tournamentId == null) {
+      setState(() {
+        _games = [];
+        _loading = false;
+        _error = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = false;
+    });
+
     try {
-      final selectedTeamIds = [_selectedLeft!, _selectedRight!];
-      if (!_teamsBelongToTournament(selectedTeamIds)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selected teams are not in this tournament')),
-        );
-        return;
-      }
-      final game = GameCreateDto(
-        status: 'Pending',
-        dateStart: _dateStart,
-        durationTime: _duration,
-        teamIds: selectedTeamIds,
-        teamStatuses: List.generate(
-          selectedTeamIds.length,
-          (index) => TeamStatusDto(teamId: selectedTeamIds[index], score: 0),
+      final basicGames = await GamesRemoteService.getGamesByTournament(
+        widget.roomId,
+      );
+
+      // Fetch detailed game data with teams for each game
+      final detailedGames = await Future.wait(
+        basicGames.map(
+          (game) => GamesRemoteService.getGameById(
+            roomId: widget.roomId,
+            gameId: game.id,
+          ),
         ),
       );
-      await AuthService.createGame(roomId: widget.roomId, tournamentId: widget.tournamentId!, game: game);
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Game created')));
-      setState(() { _selectedLeft = null; _selectedRight = null; });
+      setState(() {
+        _games = detailedGames;
+        _loading = false;
+      });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create game: $e')));
+      setState(() {
+        _loading = false;
+        _error = true;
+      });
     }
   }
 
-  // Removed old list tile builder (replaced by searchable picker UI)
+  String _formatDate(DateTime? date) {
+    if (date == null) return '-';
+    final local = date.toLocal();
+    final parts = local.toString().split('.');
+    return parts.isNotEmpty ? parts.first : local.toIso8601String();
+  }
+
+  String _titleFor(GameGetDto game) {
+    final entries = _teamScoreEntries(game);
+    if (entries.length >= 2) {
+      return '${entries[0].name} vs ${entries[1].name}';
+    }
+    if (entries.length == 1) {
+      return entries.first.name;
+    }
+    if (game.teamIds.isNotEmpty) {
+      return 'Game';
+    }
+    return 'Game';
+  }
+
+  List<TeamDisplayInfo> _teamScoreEntries(GameGetDto game) {
+    final entries = <TeamDisplayInfo>[];
+
+    // Build a map of teamId -> score from teamStatuses
+    final scoreByTeamId = <int, int>{};
+    for (final status in game.teamStatuses) {
+      if (status.teamId != null) {
+        scoreByTeamId[status.teamId!] = status.score;
+      }
+    }
+
+    // Priority 1: Use teams list as primary source (has actual team data)
+    if (game.teams.isNotEmpty) {
+      for (final team in game.teams) {
+        final score = scoreByTeamId[team.id];
+        entries.add(TeamDisplayInfo(team.name, score?.toString() ?? '-', team.icon?.data));
+      }
+      return entries;
+    }
+
+    // Priority 2: Use teamStatuses if teams is empty
+    if (game.teamStatuses.isNotEmpty) {
+      for (final status in game.teamStatuses) {
+        final name =
+            status.teamName ??
+            (status.teamId != null ? 'Team ${status.teamId}' : 'Unknown');
+        entries.add(TeamDisplayInfo(name, status.score.toString(), null));
+      }
+      return entries;
+    }
+
+    // Priority 3: Fallback to teamIds
+    if (game.teamIds.isNotEmpty) {
+      for (final id in game.teamIds) {
+        entries.add(TeamDisplayInfo('Team $id', '-', null));
+      }
+    }
+
+    return entries;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -288,93 +301,162 @@ class _GamesTabState extends State<GamesTab> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error) {
-      return const Center(child: Text('Failed to load teams', style: TextStyle(color: Colors.white)));
+      return const Center(
+        child: Text(
+          'Failed to load games',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
     }
     if (widget.tournamentId == null) {
-      return const Center(child: Text('No tournament', style: TextStyle(color: Colors.white)));
-    }
-    if (_teams.isEmpty) {
-      return const Center(child: Text('Brak dostępnych drużyn w tym turnieju', style: TextStyle(color: Colors.white70)));
+      return const Center(
+        child: Text('No tournament', style: TextStyle(color: Colors.white)),
+      );
     }
 
-    return Column(
-      children: [
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _teams.isEmpty ? null : () => _openTeamPicker(true),
-                  style: OutlinedButton.styleFrom(side: BorderSide(color: _selectedLeft != null ? AppColors.accent : Colors.white24)),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
+    return RefreshIndicator(
+      onRefresh: _loadGames,
+      color: Colors.white,
+      backgroundColor: Colors.black,
+      child:
+          _games.isEmpty
+              ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 120),
+                  Align(
+                    alignment: Alignment.center,
                     child: Text(
-                          _selectedLeft == null
-                            ? 'Select Team A'
-                            : _teamNameById(_selectedLeft),
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: _selectedLeft != null ? AppColors.accent : Colors.white70),
+                      'No games created yet',
+                      style: TextStyle(color: Colors.white70),
                     ),
                   ),
+                ],
+              )
+              : ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _teams.isEmpty ? null : () => _openTeamPicker(false),
-                  style: OutlinedButton.styleFrom(side: BorderSide(color: _selectedRight != null ? AppColors.accent : Colors.white24)),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                          _selectedRight == null
-                            ? 'Select Team B'
-                            : _teamNameById(_selectedRight),
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: _selectedRight != null ? AppColors.accent : Colors.white70),
+                children: [
+                  if (_games.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ElevatedButton.icon(
+                        onPressed: _deleteAllGames,
+                        icon: const Icon(Icons.delete_forever),
+                        label: const Text('Delete All Games'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  ..._games.map((game) {
+                    final title = _titleFor(game);
+                    final subtitleStyle = const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    );
+                    final teamEntries = _teamScoreEntries(game);
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        onTap: () => _openGameEditScreen(game),
+                        title: Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text('Status: ${game.status}', style: subtitleStyle),
+                            Text(
+                              'Start: ${_formatDate(game.dateStart)}',
+                              style: subtitleStyle,
+                            ),
+                            if (game.durationLabel != '-')
+                              Text(
+                                'Duration: ${game.durationLabel}',
+                                style: subtitleStyle,
+                              ),
+                            if (teamEntries.isNotEmpty) const SizedBox(height: 6),
+                            ...teamEntries.map(
+                              (entry) => Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Row(
+                                  children: [
+                                    if (entry.icon != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(right: 8.0),
+                                        child: ClipOval(
+                                          child: Image.memory(
+                                            entry.icon!,
+                                            width: 24,
+                                            height: 24,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                    Expanded(
+                                      child: Text(
+                                        entry.name,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      entry.score,
+                                      style: const TextStyle(
+                                        color: AppColors.accent,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.white70),
+                              tooltip: 'Edit match',
+                              onPressed: () => _openGameEditScreen(game),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.redAccent),
+                              tooltip: 'Delete match',
+                              onPressed: () => _deleteGame(game.id),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ],
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _pickDateTime,
-                  child: Text('Start: ${_dateStart.toLocal().toString().split('.').first}', style: const TextStyle(fontSize: 12)),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _pickDuration,
-                  child: Text('Duration: ${_duration.inHours.toString().padLeft(2,'0')}:${(_duration.inMinutes % 60).toString().padLeft(2,'0')}:00'),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _canCreate ? _createGame : null,
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent, disabledBackgroundColor: Colors.grey.shade800),
-              child: const Text('Create Game'),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-      ],
     );
   }
 }

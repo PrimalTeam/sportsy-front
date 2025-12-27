@@ -14,11 +14,10 @@ class _CreateTournamentScreenState extends State<CreateTournamentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-      appBar: MyAppBar(title: "Create Tournament", ),
+      appBar: MyAppBar(title: "Create Tournament"),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: TournamentForm(fetchRooms: widget.fetchRooms),
+        child: TournamentForm(fetchRooms: widget.fetchRooms),
       ),
     );
   }

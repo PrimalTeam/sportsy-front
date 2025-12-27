@@ -15,6 +15,13 @@ GetTournamentDto _$GetTournamentDtoFromJson(Map<String, dynamic> json) =>
       info: TournamentInfo.fromJson(json['info'] as Map<String, dynamic>),
       games: json['games'] as List<dynamic>? ?? [],
       teams: json['teams'] as List<dynamic>? ?? [],
+      internalConfig:
+          json['internalConfig'] == null
+              ? null
+              : TournamentInternalConfigDto.fromJson(
+                json['internalConfig'] as Map<String, dynamic>,
+              ),
+      leader: TournamentLeaderTree.fromJson(json['leader']),
     );
 
 Map<String, dynamic> _$GetTournamentDtoToJson(GetTournamentDto instance) =>
@@ -26,6 +33,8 @@ Map<String, dynamic> _$GetTournamentDtoToJson(GetTournamentDto instance) =>
       'info': instance.info,
       'games': instance.games,
       'teams': instance.teams,
+      'internalConfig': instance.internalConfig,
+      'leader': TournamentLeaderTree.toJson(instance.leader),
     };
 
 TournamentInfo _$TournamentInfoFromJson(Map<String, dynamic> json) =>
@@ -43,3 +52,16 @@ Map<String, dynamic> _$TournamentInfoToJson(TournamentInfo instance) =>
       'dateStart': instance.dateStart.toIso8601String(),
       'dateEnd': instance.dateEnd.toIso8601String(),
     };
+
+TournamentInternalConfigDto _$TournamentInternalConfigDtoFromJson(
+  Map<String, dynamic> json,
+) => TournamentInternalConfigDto(
+  autogenerateGamesFromLadder:
+      json['autogenerateGamesFromLadder'] as bool? ?? false,
+);
+
+Map<String, dynamic> _$TournamentInternalConfigDtoToJson(
+  TournamentInternalConfigDto instance,
+) => <String, dynamic>{
+  'autogenerateGamesFromLadder': instance.autogenerateGamesFromLadder,
+};

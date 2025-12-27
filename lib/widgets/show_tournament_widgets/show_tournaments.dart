@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:sportsy_front/screens/room_users_screen.dart';
 import 'package:sportsy_front/screens/tournament_info.dart';
 
-import 'package:sportsy_front/widgets/app_bar.dart';
-
 class ShowTournaments extends StatelessWidget {
   final dynamic gameDetails;
 
@@ -25,8 +23,10 @@ class ShowTournaments extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder:
-                            (context) =>
-                                TournamentInfoPage(roomId: gameDetails.id),
+                            (context) => TournamentInfoPage(
+                              roomId: gameDetails.id,
+                              userRole: gameDetails.role,
+                            ),
                       ),
                     );
                   },
@@ -36,21 +36,22 @@ class ShowTournaments extends StatelessWidget {
                 Text('Game Name: ${gameDetails.name}'),
                 Text('Sport Type: ${gameDetails.name}'),
                 Text('Is Host: ${gameDetails.role}'),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => RoomUsersScreen(
-                              roomId: gameDetails.id,
-                              role: gameDetails.role,
-                            ),
-                      ),
-                    );
-                  },
-                  child: Text("USERS"),
-                ),
+                if ('${gameDetails.role}'.toLowerCase() != 'gameobserver')
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => RoomUsersScreen(
+                                roomId: gameDetails.id,
+                                role: gameDetails.role,
+                              ),
+                        ),
+                      );
+                    },
+                    child: Text("USERS"),
+                  ),
               ],
             ),
           ],

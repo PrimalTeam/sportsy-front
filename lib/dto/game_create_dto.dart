@@ -3,10 +3,7 @@ class TeamStatusDto {
   final int score;
   const TeamStatusDto({required this.teamId, required this.score});
 
-  Map<String, dynamic> toJson() => {
-        'teamId': teamId,
-        'score': score,
-      };
+  Map<String, dynamic> toJson() => {'teamId': teamId, 'score': score};
 
   @override
   String toString() => 'TeamStatusDto(teamId: $teamId, score: $score)';
@@ -45,12 +42,12 @@ class GameCreateDto {
   }
 
   Map<String, dynamic> toJson() => {
-        'status': status,
-        'dateStart': _dateToIso8601WithoutMillis(dateStart),
-        'durationTime': _durationToString(durationTime),
-        'teamIds': teamIds,
-        'teamStatuses': teamStatuses.map((e) => e.toJson()).toList(),
-      };
+    'status': status,
+    'dateStart': _dateToIso8601WithoutMillis(dateStart),
+    'durationTime': _durationToString(durationTime),
+    'teamIds': teamIds,
+    'teamStatuses': teamStatuses.map((e) => e.toJson()).toList(),
+  };
 
   @override
   String toString() {

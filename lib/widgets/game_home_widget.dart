@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
+import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
 // import 'package:sportsy_front/screens/game_page.dart';
 import 'package:sportsy_front/screens/tournament_info.dart';
 
@@ -16,7 +16,10 @@ class GameHomeWidget extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TournamentInfoPage(roomId: gameDetails.id),
+            builder: (context) => TournamentInfoPage(
+              roomId: gameDetails.id,
+              userRole: gameDetails.role,
+            ),
           ),
         );
       },
@@ -84,8 +87,10 @@ class GameHomeWidget extends StatelessWidget {
                               'Exit game',
                               style: TextStyle(color: Colors.red),
                             ),
-                            onTap: () {
-                              AuthService.deleteRoom(gameDetails.id);
+                            onTap: () async {
+                              await RoomsRemoteService.deleteRoom(
+                                gameDetails.id,
+                              );
                               Navigator.pop(context);
                             },
                           ),

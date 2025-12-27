@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:sportsy_front/dto/create_room_dto.dart';
 import 'package:sportsy_front/dto/team_add_dto.dart';
 import 'package:sportsy_front/dto/tournament_dto.dart';
-import 'package:sportsy_front/modules/services/auth.dart';
+import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
 import 'package:sportsy_front/modules/tournament_services/sport_type_enum.dart';
 import 'package:sportsy_front/widgets/custom_main_bottom_modal_window.dart';
 import 'package:sportsy_front/widgets/tournament_create_widgets/creation_team_added.dart';
@@ -15,20 +15,17 @@ class TournamentForm extends StatefulWidget {
   final VoidCallback fetchRooms;
   const TournamentForm({super.key, required this.fetchRooms});
 
-
   @override
   State<TournamentForm> createState() => _TournamentFormState();
 }
 
 class _TournamentFormState extends State<TournamentForm> {
-
   final tournamentTitleController = TextEditingController();
   final tournamentSportTypeController = TextEditingController();
   final tournamentDescriptionController = TextEditingController();
   String tournamentEndDateController = "";
   List<GamesDto> games = [GamesDto("PENDING")];
   void createTournamentClickAction() async {
-    
     if (tournamentTitleController.text != "") {
       final roomDto = CreateRoomDto(
         tournamentTitleController.text,
@@ -41,15 +38,14 @@ class _TournamentFormState extends State<TournamentForm> {
           "single-elimination",
           tournamentSportTypeController.text,
           [],
-          teams
-
+          teams,
         ),
       );
 
       try {
         print("Generated JSON: ${jsonEncode(roomDto.toJson())}");
         print("Generated JSON: ${roomDto.toJson()}");
-        await AuthService.createRoom(roomDto);
+        await RoomsRemoteService.createRoom(roomDto);
         print("Tournament Created!");
         Navigator.pop(context, true);
       } catch (e) {
@@ -131,6 +127,11 @@ class _TournamentFormState extends State<TournamentForm> {
     }
   }
 
+  String _formatDate(DateTime date) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    return '${date.year}.${twoDigits(date.month)}.${twoDigits(date.day)} ${twoDigits(date.hour)}:${twoDigits(date.minute)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -189,7 +190,7 @@ class _TournamentFormState extends State<TournamentForm> {
             hintText:
                 _selectedDateTimeStart == null
                     ? 'Start date and time'
-                    : '${_selectedDateTimeStart!.toLocal()}'.split('.')[0],
+                    : _formatDate(_selectedDateTimeStart!),
           ),
         ),
         SizedBox(height: 15),
@@ -210,7 +211,7 @@ class _TournamentFormState extends State<TournamentForm> {
             hintText:
                 _selectedDateTimeEnd == null
                     ? 'End date and time'
-                    : '${_selectedDateTimeEnd!.toLocal()}'.split('.')[0],
+                    : _formatDate(_selectedDateTimeEnd!),
           ),
         ),
         SizedBox(height: 15),

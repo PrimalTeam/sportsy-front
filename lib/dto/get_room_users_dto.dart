@@ -18,7 +18,8 @@ class GetRoomUsersDto {
     required this.user,
   });
 
-  factory GetRoomUsersDto.fromJson(Map<String, dynamic> json) => _$GetRoomUsersDtoFromJson(json);
+  factory GetRoomUsersDto.fromJson(Map<String, dynamic> json) =>
+      _$GetRoomUsersDtoFromJson(json);
   Map<String, dynamic> toJson() => _$GetRoomUsersDtoToJson(this);
 }
 
@@ -38,6 +39,7 @@ class UserDto {
     required this.createdAt,
   });
 
-  factory UserDto.fromJson(Map<String, dynamic> json) => _$UserDtoFromJson(json);
+  factory UserDto.fromJson(Map<String, dynamic> json) =>
+      _$UserDtoFromJson(json);
   Map<String, dynamic> toJson() => _$UserDtoToJson(this);
 }

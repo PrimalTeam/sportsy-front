@@ -2,9 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/auth_dto.dart';
-import 'package:sportsy_front/screens/tournaments_screen.dart';
 import 'package:sportsy_front/screens/register_screen.dart';
-import '../modules/services/auth.dart';
+import 'package:sportsy_front/features/auth/data/auth_remote_service.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,9 +22,11 @@ class LoginScreenState extends State<LoginScreen> {
 
   void _submit() async {
     if (_isLoading) return;
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
     try {
-      final response = await AuthService.login(
+      final response = await AuthRemoteService.login(
         LoginDto(
           email: _emailController.text,
           password: _passwordController.text,
@@ -33,11 +34,9 @@ class LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return;
       if (response.statusCode == 201) {
-        Navigator.pushAndRemoveUntil(
+        Navigator.of(
           context,
-          MaterialPageRoute(builder: (context) => MyHomePage(title: "homePage")),
-          (Route<dynamic> route) => false,
-        );
+        ).pushNamedAndRemoveUntil('/home', (route) => false);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Nieprawidłowe dane logowania")),
@@ -51,7 +50,9 @@ class LoginScreenState extends State<LoginScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -85,16 +86,22 @@ class LoginScreenState extends State<LoginScreen> {
                       segments: const <ButtonSegment<AuthMode>>[
                         ButtonSegment<AuthMode>(
                           value: AuthMode.login,
-                          label: Text("Login", style: TextStyle(
-                            color: AppColors.background,
-                          ),),
+                          label: Text(
+                            "Login",
+                            style: TextStyle(color: AppColors.background),
+                          ),
                           icon: Icon(Icons.login),
-
                         ),
                         ButtonSegment<AuthMode>(
                           value: AuthMode.register,
-                          label: Text("Register", style: TextStyle(color: Colors.grey)),
-                          icon: Icon(Icons.app_registration, color: Colors.grey,),
+                          label: Text(
+                            "Register",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                          icon: Icon(
+                            Icons.app_registration,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                       selected: <AuthMode>{_selectedMode},
@@ -131,7 +138,6 @@ class LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: "Password",
                       prefixIcon: const Icon(Icons.lock),
-                     
                     ),
                     obscureText: true,
                   ),
@@ -140,9 +146,7 @@ class LoginScreenState extends State<LoginScreen> {
                   SizedBox(
                     child: ElevatedButton(
                       onPressed: _submit,
-                      child: Text(
-                        "LOGIN",
-                      ),
+                      child: Text("LOGIN"),
                     ),
                   ),
                 ],

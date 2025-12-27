@@ -9,6 +9,7 @@ class CreateRoomDto {
   final TournamentDto tournament;
   CreateRoomDto(this.name, this.tournament);
 
-  factory CreateRoomDto.fromJson(Map<String, dynamic> json) => _$CreateRoomDtoFromJson(json);
+  factory CreateRoomDto.fromJson(Map<String, dynamic> json) =>
+      _$CreateRoomDtoFromJson(json);
   Map<String, dynamic> toJson() => _$CreateRoomDtoToJson(this);
 }

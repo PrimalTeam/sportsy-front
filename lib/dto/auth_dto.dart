@@ -15,7 +15,8 @@ class RegisterDto {
     required this.userName,
   });
 
- factory RegisterDto.fromJson(Map<String, dynamic> json) => _$RegisterDtoFromJson(json);
+  factory RegisterDto.fromJson(Map<String, dynamic> json) =>
+      _$RegisterDtoFromJson(json);
   Map<String, dynamic> toJson() => _$RegisterDtoToJson(this);
 }
 
@@ -24,10 +25,8 @@ class LoginDto {
   final String email;
   final String password;
 
-  LoginDto({
-    required this.email,
-    required this.password,
-  });
-  factory LoginDto.fromJson(Map<String, dynamic> json) => _$LoginDtoFromJson(json);
+  LoginDto({required this.email, required this.password});
+  factory LoginDto.fromJson(Map<String, dynamic> json) =>
+      _$LoginDtoFromJson(json);
   Map<String, dynamic> toJson() => _$LoginDtoToJson(this);
 }

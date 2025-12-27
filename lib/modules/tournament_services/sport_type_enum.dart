@@ -1,5 +1,1 @@
-enum SportType {
-  basketball,
-  football,
-  volleyball,
-}
+enum SportType { basketball, football, volleyball }

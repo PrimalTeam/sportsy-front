@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
-
 class TeamAddForm extends StatefulWidget {
   final void Function(String name, File? logo) onTeamAdded;
 
@@ -40,14 +39,18 @@ class _TeamAddFormState extends State<TeamAddForm> {
     );
     return file;
   }
-  void _submit() async {
 
-    widget.onTeamAdded(_nameController.text, _image?? await _assetToTempFile(_defaultAsset, 'logo.png'));
+  void _submit() async {
+    widget.onTeamAdded(
+      _nameController.text,
+      _image ?? await _assetToTempFile(_defaultAsset, 'logo.png'),
+    );
 
     _nameController.clear();
     setState(() {
       _image = null;
     });
+    
   }
 
   @override
