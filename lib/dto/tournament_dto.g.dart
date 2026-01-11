@@ -6,6 +6,17 @@ part of 'tournament_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+InternalConfigDto _$InternalConfigDtoFromJson(Map<String, dynamic> json) =>
+    InternalConfigDto(
+      autogenerateGamesFromLadder:
+          json['autogenerateGamesFromLadder'] as bool? ?? true,
+    );
+
+Map<String, dynamic> _$InternalConfigDtoToJson(InternalConfigDto instance) =>
+    <String, dynamic>{
+      'autogenerateGamesFromLadder': instance.autogenerateGamesFromLadder,
+    };
+
 TournamentDto _$TournamentDtoFromJson(Map<String, dynamic> json) =>
     TournamentDto(
       InfoDto.fromJson(json['info'] as Map<String, dynamic>),
@@ -19,6 +30,12 @@ TournamentDto _$TournamentDtoFromJson(Map<String, dynamic> json) =>
               ?.map((e) => TeamAddDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      internalConfig:
+          json['internalConfig'] == null
+              ? null
+              : InternalConfigDto.fromJson(
+                json['internalConfig'] as Map<String, dynamic>,
+              ),
     );
 
 Map<String, dynamic> _$TournamentDtoToJson(TournamentDto instance) =>
@@ -28,6 +45,7 @@ Map<String, dynamic> _$TournamentDtoToJson(TournamentDto instance) =>
       'leaderType': instance.leaderType,
       'games': instance.games,
       'teams': instance.teams,
+      'internalConfig': instance.internalConfig,
     };
 
 InfoDto _$InfoDtoFromJson(Map<String, dynamic> json) => InfoDto(

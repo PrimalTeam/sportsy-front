@@ -4,6 +4,17 @@ import 'package:sportsy_front/dto/team_add_dto.dart';
 part 'tournament_dto.g.dart';
 
 @JsonSerializable()
+class InternalConfigDto {
+  final bool autogenerateGamesFromLadder;
+
+  InternalConfigDto({this.autogenerateGamesFromLadder = true});
+
+  factory InternalConfigDto.fromJson(Map<String, dynamic> json) =>
+      _$InternalConfigDtoFromJson(json);
+  Map<String, dynamic> toJson() => _$InternalConfigDtoToJson(this);
+}
+
+@JsonSerializable()
 class TournamentDto {
   final InfoDto info;
   final String sportType;
@@ -12,14 +23,16 @@ class TournamentDto {
   final List<GamesDto> games;
   @JsonKey(defaultValue: [])
   final List<TeamAddDto> teams;
+  final InternalConfigDto? internalConfig;
 
   TournamentDto(
     this.info,
     this.leaderType,
     this.sportType,
     this.games,
-    this.teams,
-  );
+    this.teams, {
+    this.internalConfig,
+  });
 
   factory TournamentDto.fromJson(Map<String, dynamic> json) =>
       _$TournamentDtoFromJson(json);

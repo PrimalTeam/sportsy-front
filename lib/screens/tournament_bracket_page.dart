@@ -32,6 +32,7 @@ class TournamentBracketPage extends StatefulWidget {
 class TournamentBracketPageState extends State<TournamentBracketPage> {
   static const String _actionGenerate = '_generate';
   static const String _actionRegenerate = '_regenerate';
+  static const String _actionDelete = '_delete';
 
   GetTournamentDto? _tournament;
   bool _isLoading = true;
@@ -247,6 +248,12 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
           await _generateBracket(resetExistingGames: true);
         }
         break;
+      case _actionDelete:
+        final confirmedDelete = await _confirmDelete();
+        if (confirmedDelete == true) {
+          await _deleteBracket();
+        }
+        break;
       default:
         break;
     }
@@ -272,6 +279,32 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Rebuild'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<bool?> _confirmDelete() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.black87,
+          title: const Text('Delete bracket?', style: TextStyle(color: Colors.white)),
+          content: const Text(
+            'This will remove the ladder structure and associated games. This action cannot be undone.',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -421,49 +454,49 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
               if (widget.tournamentId != null && _canManageBracket)
                 Padding(
                   padding: const EdgeInsets.only(right: 4),
-                child: TextButton.icon(
-                  onPressed: () => _openGamesManager(tournament),
-                  icon: const Icon(Icons.sports_esports, size: 18),
-                  label: const Text('Manage games'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.accent,
+                  child: TextButton.icon(
+                    onPressed: () => _openGamesManager(tournament),
+                    icon: const Icon(Icons.sports_esports, size: 18),
+                    label: const Text('Manage games'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.accent,
+                    ),
                   ),
                 ),
-              ),
-            if (widget.tournamentId != null && _canManageBracket)
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: Colors.white70),
-                tooltip: 'Bracket actions',
-                onSelected: _handleMenuSelection,
-                itemBuilder: (context) => [
-                  PopupMenuItem<String>(
-                    value: _actionGenerate,
-                    child: const Text('Generate bracket'),
-                  ),
-                  PopupMenuItem<String>(
-                    value: _actionRegenerate,
-                    child: const Text('Rebuild (reset games)'),
-                  ),
-                ],
-              ),
-            IconButton(
-              tooltip: 'Refresh bracket',
-              onPressed: _refreshBracket,
-              icon: const Icon(Icons.refresh, color: Colors.white70),
-            ),
-          ],
+              if (widget.tournamentId != null && _canManageBracket)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.white70),
+                  tooltip: 'Bracket actions',
+                  onSelected: _handleMenuSelection,
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                      value: _actionGenerate,
+                      child: const Text('Generate bracket'),
+                    ),
+                    PopupMenuItem<String>(
+                      value: _actionRegenerate,
+                      child: const Text('Rebuild (reset games)'),
+                    ),
+                    const PopupMenuDivider(),
+                    PopupMenuItem<String>(
+                      value: _actionDelete,
+                      child: const Text('Delete bracket'),
+                    ),
+                  ],
+                ),
+            ],
+          ),
         ),
-      ),
-      Expanded(
-        child: _BracketLayout(
-          rounds: roundGroups,
-          onEditRequested: _canEditMatches ? _handleMatchEdit : null,
-          getGameNotifier: _getGameNotifier,
+        Expanded(
+          child: _BracketLayout(
+            rounds: roundGroups,
+            onEditRequested: _canEditMatches ? _handleMatchEdit : null,
+            getGameNotifier: _getGameNotifier,
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   List<List<TournamentLeaderNode>> _collectRounds(TournamentLeaderNode root) {
     final depthBuckets = <List<TournamentLeaderNode>>[];
@@ -617,6 +650,38 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to generate bracket: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdating = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteBracket() async {
+    if (_isUpdating || widget.tournamentId == null || !_canManageBracket) {
+      return;
+    }
+
+    setState(() {
+      _isUpdating = true;
+    });
+
+    try {
+      await LadderRemoteService.deleteLadder(roomId: widget.roomId);
+      await _refreshBracket();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bracket deleted')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete bracket: $e')),
         );
       }
     } finally {

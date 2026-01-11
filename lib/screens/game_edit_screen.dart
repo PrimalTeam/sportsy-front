@@ -3,6 +3,7 @@ import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/game_get_dto.dart';
 import 'package:sportsy_front/features/games/data/games_remote_service.dart';
 import 'package:sportsy_front/features/team_status/data/team_status_remote_service.dart';
+import 'package:sportsy_front/features/tournaments/data/ladder_remote_service.dart';
 import 'package:sportsy_front/widgets/app_bar.dart';
 
 class GameEditScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class _GameEditScreenState extends State<GameEditScreen> {
   bool _loadingStatuses = true;
   bool _error = false;
   bool _hasChanges = false;
+  bool _isSyncingLadder = false;
   final Set<int> _pendingScoreUpdates = <int>{};
   String? _statusSubmitting;
 
@@ -143,6 +145,11 @@ class _GameEditScreenState extends State<GameEditScreen> {
         _statusSubmitting = null;
         _hasChanges = true;
       });
+
+      // If match is completed, advance bracket by syncing ladder
+      if (newStatus.toLowerCase() == 'completed') {
+        await _syncLadder();
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -324,6 +331,29 @@ class _GameEditScreenState extends State<GameEditScreen> {
     }
 
     return rows;
+  }
+
+  Future<void> _syncLadder() async {
+    if (_isSyncingLadder) return;
+    setState(() {
+      _isSyncingLadder = true;
+    });
+
+    try {
+      await LadderRemoteService.updateLadder(roomId: widget.roomId);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to sync bracket: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSyncingLadder = false;
+        });
+      }
+    }
   }
 
   Widget _buildTeamRow({

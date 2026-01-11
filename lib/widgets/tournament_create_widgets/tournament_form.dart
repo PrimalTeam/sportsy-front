@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sportsy_front/dto/create_room_dto.dart';
 import 'package:sportsy_front/dto/team_add_dto.dart';
-import 'package:sportsy_front/dto/tournament_dto.dart';
+import 'package:sportsy_front/dto/tournament_dto.dart' show TournamentDto, InfoDto, GamesDto, InternalConfigDto;
 import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
 import 'package:sportsy_front/modules/tournament_services/sport_type_enum.dart';
 import 'package:sportsy_front/widgets/custom_main_bottom_modal_window.dart';
@@ -39,6 +39,7 @@ class _TournamentFormState extends State<TournamentForm> {
           tournamentSportTypeController.text,
           [],
           teams,
+          internalConfig: InternalConfigDto(autogenerateGamesFromLadder: true),
         ),
       );
 

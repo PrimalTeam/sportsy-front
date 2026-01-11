@@ -45,6 +45,7 @@ dependencies:
   dio:
   dart_jsonwebtoken:
   socket_io_client: ^3.0.2
+  geolocator: ^14.0.2
 
 dev_dependencies:
   flutter_test:

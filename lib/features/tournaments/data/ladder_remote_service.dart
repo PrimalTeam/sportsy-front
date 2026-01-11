@@ -44,6 +44,21 @@ class LadderRemoteService {
     }
   }
 
+  static Future<void> deleteLadder({
+    required int roomId,
+    bool resetGames = true,
+  }) async {
+    try {
+      await _dio.delete(
+        '/ladder/delete/$roomId',
+        queryParameters: {'resetGames': resetGames},
+      );
+    } on DioException catch (e) {
+      final message = e.response?.data ?? e.message;
+      throw Exception('Failed to delete ladder: $message');
+    }
+  }
+
   static Future<void> resetGames({
     required int roomId,
     required int tournamentId,
