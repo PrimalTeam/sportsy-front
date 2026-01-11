@@ -168,6 +168,13 @@ class _GamesPageState extends State<GamesPage> {
         game: game,
       );
 
+      // Update ladder to include the new game in bracket
+      try {
+        await LadderRemoteService.updateLadder(roomId: widget.roomId);
+      } catch (e) {
+        debugPrint('Failed to update ladder: $e');
+      }
+
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,

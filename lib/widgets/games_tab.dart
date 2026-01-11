@@ -8,6 +8,7 @@ import 'package:sportsy_front/dto/get_teams_dto.dart';
 import 'package:sportsy_front/features/games/data/games_remote_service.dart';
 import 'package:sportsy_front/features/games/data/game_websocket_service.dart';
 import 'package:sportsy_front/features/games/data/game_websocket_events.dart';
+import 'package:sportsy_front/features/tournaments/data/ladder_remote_service.dart';
 import 'package:sportsy_front/screens/game_edit_screen.dart';
 
 class TeamDisplayInfo {
@@ -20,7 +21,13 @@ class TeamDisplayInfo {
 class GamesTab extends StatefulWidget {
   final int roomId;
   final int? tournamentId;
-  const GamesTab({super.key, required this.roomId, required this.tournamentId});
+  final bool bracketExists;
+  const GamesTab({
+    super.key,
+    required this.roomId,
+    required this.tournamentId,
+    this.bracketExists = false,
+  });
 
   @override
   GamesTabState createState() => GamesTabState();
@@ -159,6 +166,50 @@ class GamesTabState extends State<GamesTab> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to delete game: $e')),
+      );
+    }
+  }
+
+  Future<void> _autoGenerateBracket() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Auto-generate Bracket'),
+        content: const Text('This will delete all existing games and automatically generate the tournament bracket. Continue?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Generate')),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      // First delete all existing games
+      final gamesToDelete = List<GameGetDto>.from(_games);
+      for (final game in gamesToDelete) {
+        try {
+          await GamesRemoteService.deleteGame(widget.roomId, game.id);
+        } catch (e) {
+          debugPrint('Failed to delete game ${game.id}: $e');
+        }
+      }
+
+      // Then generate the bracket
+      await LadderRemoteService.generateLadder(roomId: widget.roomId);
+      
+      // Reload games list
+      await _loadGames();
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bracket generated successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to generate bracket: $e')),
       );
     }
   }
@@ -340,7 +391,20 @@ class GamesTabState extends State<GamesTab> {
                   vertical: 12,
                 ),
                 children: [
-                  if (_games.isNotEmpty)
+                  if (_games.isNotEmpty && !widget.bracketExists)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ElevatedButton.icon(
+                        onPressed: _autoGenerateBracket,
+                        icon: const Icon(Icons.auto_fix_high),
+                        label: const Text('Auto-generate Bracket'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  if (_games.isNotEmpty && !widget.bracketExists)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: ElevatedButton.icon(
@@ -445,11 +509,12 @@ class GamesTabState extends State<GamesTab> {
                               tooltip: 'Edit match',
                               onPressed: () => _openGameEditScreen(game),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.redAccent),
-                              tooltip: 'Delete match',
-                              onPressed: () => _deleteGame(game.id),
-                            ),
+                            if (!widget.bracketExists)
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                tooltip: 'Delete match',
+                                onPressed: () => _deleteGame(game.id),
+                              ),
                           ],
                         ),
                       ),

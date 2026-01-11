@@ -9,10 +9,16 @@ import 'package:sportsy_front/screens/team_details_page.dart';
 enum _TeamsViewStatus { loading, error, empty, data }
 
 class TeamsShowPage extends StatefulWidget {
-  const TeamsShowPage({super.key, required this.roomId, this.canManage = true});
+  const TeamsShowPage({
+    super.key,
+    required this.roomId,
+    this.canManage = true,
+    this.bracketExists = false,
+  });
 
   final int roomId;
   final bool canManage;
+  final bool bracketExists;
 
   @override
   TeamsShowPageState createState() => TeamsShowPageState();
@@ -100,7 +106,11 @@ class TeamsShowPageState extends State<TeamsShowPage> {
   Future<void> _openTeamEditor(GetTeamsDto team) async {
     final changed = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => TeamEditPage(roomId: widget.roomId, team: team),
+        builder: (context) => TeamEditPage(
+          roomId: widget.roomId,
+          team: team,
+          bracketExists: widget.bracketExists,
+        ),
       ),
     );
     if (changed == true && mounted) {

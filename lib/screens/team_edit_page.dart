@@ -8,9 +8,15 @@ import 'package:sportsy_front/dto/get_teams_dto.dart';
 import 'package:sportsy_front/features/teams/data/teams_remote_service.dart';
 
 class TeamEditPage extends StatefulWidget {
-  const TeamEditPage({super.key, required this.roomId, required this.team});
+  const TeamEditPage({
+    super.key,
+    required this.roomId,
+    required this.team,
+    this.bracketExists = false,
+  });
   final int roomId;
   final GetTeamsDto team;
+  final bool bracketExists;
 
   @override
   State<TeamEditPage> createState() => _TeamEditPageState();
@@ -151,10 +157,11 @@ class _TeamEditPageState extends State<TeamEditPage> {
         backgroundColor: Colors.black,
         title: const Text('Edit Team'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.redAccent),
-            onPressed: _saving ? null : _deleteTeam,
-          ),
+          if (!widget.bracketExists)
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: _saving ? null : _deleteTeam,
+            ),
         ],
       ),
       backgroundColor: AppColors.background,

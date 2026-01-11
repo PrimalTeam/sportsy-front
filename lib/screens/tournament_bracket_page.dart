@@ -26,10 +26,10 @@ class TournamentBracketPage extends StatefulWidget {
   final String userRole;
 
   @override
-  State<TournamentBracketPage> createState() => _TournamentBracketPageState();
+  TournamentBracketPageState createState() => TournamentBracketPageState();
 }
 
-class _TournamentBracketPageState extends State<TournamentBracketPage> {
+class TournamentBracketPageState extends State<TournamentBracketPage> {
   static const String _actionGenerate = '_generate';
   static const String _actionRegenerate = '_regenerate';
 
@@ -224,6 +224,11 @@ class _TournamentBracketPageState extends State<TournamentBracketPage> {
         });
       }
     }
+  }
+
+  /// Public method to refresh bracket - can be called via GlobalKey
+  Future<void> refreshBracket() async {
+    await _loadBracket();
   }
 
   Future<void> _refreshBracket() async {

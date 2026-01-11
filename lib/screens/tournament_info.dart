@@ -47,6 +47,8 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
   final GlobalKey<TeamsShowPageState> _teamsKey =
       GlobalKey<TeamsShowPageState>();
   final GlobalKey<GamesTabState> _gamesTabKey = GlobalKey<GamesTabState>();
+  final GlobalKey<TournamentBracketPageState> _bracketKey =
+      GlobalKey<TournamentBracketPageState>();
   Set<int> _tournamentTeamIds = {};
   List<GetTeamsDto> _tournamentTeams = [];
 
@@ -54,13 +56,31 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
   bool get _isSpectator => _role == 'spectrator';
   bool get _canManageContent => _isAdmin || _isSpectator;
 
+  /// Check if bracket exists (has games in leader tree)
+  bool get _bracketExists {
+    final leader = _roomInfo?.tournament?.leader;
+    if (leader == null) return false;
+    // Bracket exists if there's a root node or preGames
+    return leader.root != null || leader.preGames.isNotEmpty;
+  }
+
   @override
   void initState() {
     super.initState();
     _role = widget.userRole.toLowerCase();
     _tabOrder = _buildTabOrder(_role);
     _tabController = TabController(length: _tabOrder.length, vsync: this);
+    _tabController.addListener(_onTabChanged);
     _initializeData();
+  }
+
+  void _onTabChanged() {
+    if (!_tabController.indexIsChanging) {
+      final currentTab = _tabOrder[_tabController.index];
+      if (currentTab == _tabBracket) {
+        _bracketKey.currentState?.refreshBracket();
+      }
+    }
   }
 
   @override
@@ -73,8 +93,10 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
         _role = newRole;
         if (!listEquals(newOrder, _tabOrder)) {
           _tabOrder = newOrder;
+          _tabController.removeListener(_onTabChanged);
           _tabController.dispose();
           _tabController = TabController(length: _tabOrder.length, vsync: this);
+          _tabController.addListener(_onTabChanged);
         }
       });
     }
@@ -82,6 +104,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -324,17 +347,20 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
           key: _gamesTabKey,
           roomId: widget.roomId,
           tournamentId: _roomInfo?.tournament?.id,
+          bracketExists: _bracketExists,
         );
       case _tabTeams:
         return TeamsShowPage(
           key: _teamsKey,
           roomId: widget.roomId,
           canManage: _canManageContent,
+          bracketExists: _bracketExists,
         );
       case _tabUsers:
         return RoomUsersScreen(roomId: widget.roomId, role: _role);
       case _tabBracket:
         return TournamentBracketPage(
+          key: _bracketKey,
           roomId: widget.roomId,
           tournamentId: _roomInfo?.tournament?.id,
           userRole: _role,
@@ -371,6 +397,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
         );
       case _tabGames:
         if (_roomInfo?.tournament == null) return null;
+        if (_bracketExists) return null; // Cannot add games when bracket exists
         return FloatingActionButton(
           onPressed: () async {
             await Navigator.of(context).push(
@@ -392,6 +419,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
           child: const Icon(Icons.add),
         );
       case _tabTeams:
+        if (_bracketExists) return null; // Cannot add teams when bracket exists
         return FloatingActionButton(
           onPressed: _openAddTeamSheet,
           backgroundColor: AppColors.accent,
