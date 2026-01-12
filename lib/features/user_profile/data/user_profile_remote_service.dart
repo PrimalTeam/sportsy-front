@@ -16,4 +16,21 @@ class UserProfileRemoteService {
       throw Exception('Failed to fetch user profile: ${e.response?.data}');
     }
   }
+
+  static Future<UserProfileDto> updateProfile({
+    String? username,
+    String? email,
+  }) async {
+    try {
+      final body = <String, dynamic>{};
+      if (username != null && username.isNotEmpty) body['username'] = username;
+      if (email != null && email.isNotEmpty) body['email'] = email;
+
+      final response = await _dio.patch('/user/profile', data: body);
+      final data = response.data as Map<String, dynamic>;
+      return UserProfileDto.fromJson(data);
+    } on DioException catch (e) {
+      throw Exception('Failed to update profile: ${e.response?.data}');
+    }
+  }
 }

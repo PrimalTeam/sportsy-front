@@ -11,6 +11,17 @@ import 'package:sportsy_front/modules/tournament_services/sport_type_enum.dart';
 import 'package:sportsy_front/widgets/custom_main_bottom_modal_window.dart';
 import 'package:sportsy_front/widgets/tournament_create_widgets/creation_team_added.dart';
 
+/// Available ladder/bracket types
+enum LadderType {
+  singleElimination('single-elimination', 'Single Elimination'),
+  doubleElimination('double-elimination', 'Double Elimination'),
+  roundRobin('round-robin', 'Round Robin');
+
+  const LadderType(this.value, this.displayName);
+  final String value;
+  final String displayName;
+}
+
 class TournamentForm extends StatefulWidget {
   final VoidCallback fetchRooms;
   const TournamentForm({super.key, required this.fetchRooms});
@@ -25,6 +36,8 @@ class _TournamentFormState extends State<TournamentForm> {
   final tournamentDescriptionController = TextEditingController();
   String tournamentEndDateController = "";
   List<GamesDto> games = [GamesDto("PENDING")];
+  LadderType _selectedLadderType = LadderType.singleElimination;
+
   void createTournamentClickAction() async {
     if (tournamentTitleController.text != "") {
       final roomDto = CreateRoomDto(
@@ -35,7 +48,7 @@ class _TournamentFormState extends State<TournamentForm> {
             tournamentDescriptionController.text,
             tournamentTitleController.text,
           ),
-          "single-elimination",
+          _selectedLadderType.value,
           tournamentSportTypeController.text,
           [],
           teams,
@@ -162,6 +175,32 @@ class _TournamentFormState extends State<TournamentForm> {
                   .toList(),
           onSelected: (SportType? selectedSport) {
             print("Selected sport type: $selectedSport");
+          },
+        ),
+
+        SizedBox(height: 15),
+
+        // Ladder/Bracket type dropdown
+        DropdownMenu<LadderType>(
+          expandedInsets: EdgeInsets.zero,
+          leadingIcon: const Icon(Icons.account_tree),
+          initialSelection: _selectedLadderType,
+          label: Text("Bracket format", style: TextStyle(color: Colors.grey)),
+          dropdownMenuEntries:
+              LadderType.values
+                  .map(
+                    (ladder) => DropdownMenuEntry<LadderType>(
+                      value: ladder,
+                      label: ladder.displayName,
+                    ),
+                  )
+                  .toList(),
+          onSelected: (LadderType? selectedLadder) {
+            if (selectedLadder != null) {
+              setState(() {
+                _selectedLadderType = selectedLadder;
+              });
+            }
           },
         ),
 

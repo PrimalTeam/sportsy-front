@@ -4,6 +4,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 class JwtStorageService {
   static const _jwtTokenKey = 'jwt_token';
   static const _refreshTokenKey = 'refresh_token';
+  static const _cityKey = 'weather_city';
 
   static final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -48,5 +49,13 @@ class JwtStorageService {
     } catch (_) {
       return true;
     }
+  }
+
+  static Future<void> storeCity(String city) async {
+    await _storage.write(key: _cityKey, value: city);
+  }
+
+  static Future<String?> getCity() async {
+    return _storage.read(key: _cityKey);
   }
 }

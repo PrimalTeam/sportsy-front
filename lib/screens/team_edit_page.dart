@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/get_teams_dto.dart';
 import 'package:sportsy_front/features/teams/data/teams_remote_service.dart';
@@ -23,12 +24,16 @@ class TeamEditPage extends StatefulWidget {
 }
 
 class _TeamEditPageState extends State<TeamEditPage> {
+  static const int _maxImageSize = 256; // Max width/height in pixels
+  static const int _jpegQuality = 85; // JPEG quality (0-100)
+  static const String _defaultAsset = 'lib/assets/logo.png';
+  
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   // Align with TeamAddForm: hold File, convert to bytes only on save
   File? _imageFile;
-  static const String _defaultAsset = 'lib/assets/logo.png';
   bool _saving = false;
+  bool _isProcessingImage = false;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -50,21 +55,94 @@ class _TeamEditPageState extends State<TeamEditPage> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+    );
     if (picked != null) {
-      setState(() => _imageFile = File(picked.path));
+      setState(() => _isProcessingImage = true);
+      try {
+        final processedFile = await _processImage(File(picked.path));
+        setState(() {
+          _imageFile = processedFile;
+          _isProcessingImage = false;
+        });
+      } catch (e) {
+        debugPrint('Error processing image: $e');
+        setState(() {
+          _imageFile = File(picked.path);
+          _isProcessingImage = false;
+        });
+      }
     }
+  }
+
+  /// Process image: resize and convert to JPEG for optimal size
+  Future<File> _processImage(File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final originalImage = img.decodeImage(bytes);
+    
+    if (originalImage == null) {
+      return imageFile;
+    }
+
+    // Resize if larger than max size
+    img.Image resized;
+    if (originalImage.width > _maxImageSize || originalImage.height > _maxImageSize) {
+      if (originalImage.width > originalImage.height) {
+        resized = img.copyResize(originalImage, width: _maxImageSize);
+      } else {
+        resized = img.copyResize(originalImage, height: _maxImageSize);
+      }
+    } else {
+      resized = originalImage;
+    }
+
+    // Encode as JPEG for smaller file size
+    final jpegBytes = img.encodeJpg(resized, quality: _jpegQuality);
+
+    // Save to temp file
+    final tempDir = Directory.systemTemp;
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final file = File('${tempDir.path}/team_logo_$timestamp.jpg');
+    await file.writeAsBytes(jpegBytes, flush: true);
+
+    debugPrint('Image processed: ${bytes.length} bytes -> ${jpegBytes.length} bytes');
+    
+    return file;
   }
 
   Future<File> _assetToTempFile(String assetPath, String fileName) async {
     final bytes = await rootBundle.load(assetPath);
     final buffer = bytes.buffer;
+    final uint8List = buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes);
+    
+    // Process the default asset too
+    final originalImage = img.decodeImage(uint8List);
+    if (originalImage != null) {
+      img.Image resized;
+      if (originalImage.width > _maxImageSize || originalImage.height > _maxImageSize) {
+        if (originalImage.width > originalImage.height) {
+          resized = img.copyResize(originalImage, width: _maxImageSize);
+        } else {
+          resized = img.copyResize(originalImage, height: _maxImageSize);
+        }
+      } else {
+        resized = originalImage;
+      }
+      
+      final jpegBytes = img.encodeJpg(resized, quality: _jpegQuality);
+      final tempDir = Directory.systemTemp;
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(jpegBytes, flush: true);
+      return file;
+    }
+    
+    // Fallback if decoding fails
     final tempDir = Directory.systemTemp;
     final file = File('${tempDir.path}/$fileName');
-    await file.writeAsBytes(
-      buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
-      flush: true,
-    );
+    await file.writeAsBytes(uint8List, flush: true);
     return file;
   }
 
@@ -84,7 +162,7 @@ class _TeamEditPageState extends State<TeamEditPage> {
       if (_imageFile != null) {
         iconBytes = await _imageFile!.readAsBytes();
       } else {
-        final fallback = await _assetToTempFile(_defaultAsset, 'logo.png');
+        final fallback = await _assetToTempFile(_defaultAsset, 'logo.jpg');
         iconBytes = await fallback.readAsBytes();
       }
 
@@ -174,7 +252,7 @@ class _TeamEditPageState extends State<TeamEditPage> {
             children: [
               Center(
                 child: GestureDetector(
-                  onTap: _pickImage,
+                  onTap: widget.bracketExists ? null : _pickImage,
                   child: CircleAvatar(
                     radius: 42,
                     backgroundColor: Colors.grey.shade900,
@@ -191,10 +269,13 @@ class _TeamEditPageState extends State<TeamEditPage> {
               TextFormField(
                 controller: _nameController,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                enabled: !widget.bracketExists,
+                decoration: InputDecoration(
                   labelText: 'Team name',
-                  labelStyle: TextStyle(color: Colors.white70),
-                  prefixIcon: Icon(Icons.group, color: Colors.white70),
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  prefixIcon: const Icon(Icons.group, color: Colors.white70),
+                  helperText: widget.bracketExists ? 'Cannot edit when bracket exists' : null,
+                  helperStyle: const TextStyle(color: Colors.orangeAccent),
                 ),
                 validator:
                     (v) =>
@@ -206,9 +287,9 @@ class _TeamEditPageState extends State<TeamEditPage> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _saving ? null : _save,
+                  onPressed: (_saving || widget.bracketExists) ? null : _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
+                    backgroundColor: widget.bracketExists ? Colors.grey : AppColors.accent,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child:

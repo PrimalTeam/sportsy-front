@@ -31,7 +31,7 @@ class TournamentBracketPage extends StatefulWidget {
 
 class TournamentBracketPageState extends State<TournamentBracketPage> {
   static const String _actionGenerate = '_generate';
-  static const String _actionRegenerate = '_regenerate';
+  static const String _actionGenerateWithGames = '_generateWithGames';
   static const String _actionDelete = '_delete';
 
   GetTournamentDto? _tournament;
@@ -240,10 +240,10 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
     if (!_canManageBracket) return;
     switch (action) {
       case _actionGenerate:
-        await _generateBracket();
+        await _generateBracket(resetExistingGames: false);
         break;
-      case _actionRegenerate:
-        final confirmed = await _confirmRegenerate();
+      case _actionGenerateWithGames:
+        final confirmed = await _confirmGenerateWithGames();
         if (confirmed == true) {
           await _generateBracket(resetExistingGames: true);
         }
@@ -259,13 +259,13 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
     }
   }
 
-  Future<bool?> _confirmRegenerate() {
+  Future<bool?> _confirmGenerateWithGames() {
     return showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.black87,
-          title: const Text('Rebuild bracket?', style: TextStyle(color: Colors.white)),
+          title: const Text('Generate bracket?', style: TextStyle(color: Colors.white)),
           content: const Text(
             'Existing games will be removed and the bracket will be generated from scratch. '
             'This action cannot be undone.',
@@ -278,7 +278,7 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Rebuild'),
+              child: const Text('Generate'),
             ),
           ],
         );
@@ -394,8 +394,7 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
     }
 
     final tree = tournament.leader;
-    final hasStructure =
-        tree != null && (tree.root != null || tree.preGames.isNotEmpty);
+    final hasStructure = _hasLadderStructure(tree);
     if (!hasStructure) {
       final teamsCount = tournament.teams.length;
       final canGenerate = teamsCount >= 2;
@@ -403,20 +402,35 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
         primaryMessage: 'Bracket has not been defined yet.',
         secondaryMessage:
             canGenerate
-                ? 'Generate the bracket to create initial matchups.'
-                : 'Add at least two teams before generating the bracket.',
+                ? 'Generate the bracket from existing games or create new games from teams.'
+                : 'Add games or teams before generating the bracket.',
         canGenerate: canGenerate,
         isProcessing: _isUpdating,
-        onGenerate:
-          canGenerate && _canManageBracket
-            ? () => _generateBracket()
+        onGenerateFromGames:
+          _canManageBracket
+            ? () => _generateBracket(resetExistingGames: false)
             : null,
-        onGenerateFresh:
+        onGenerateWithTeams:
           canGenerate && _canManageBracket
-            ? () => _generateBracket(resetExistingGames: true)
+            ? () async {
+                final confirmed = await _confirmGenerateWithGames();
+                if (confirmed == true) {
+                  await _generateBracket(resetExistingGames: true);
+                }
+              }
             : null,
         onRefresh: _refreshBracket,
       );
+    }
+
+    // Handle Round Robin differently
+    if (tree!.isRoundRobin) {
+      return _buildRoundRobinView(tournament, tree);
+    }
+
+    // Handle Double Elimination
+    if (tree.isDoubleElimination) {
+      return _buildDoubleEliminationView(tournament, tree);
     }
 
     final roundGroups = _buildRoundGroups(tree);
@@ -435,58 +449,7 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
             minHeight: 2,
             backgroundColor: Colors.transparent,
           ),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Format: ${tournament.leaderType}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              if (widget.tournamentId != null && _canManageBracket)
-                Padding(
-                  padding: const EdgeInsets.only(right: 4),
-                  child: TextButton.icon(
-                    onPressed: () => _openGamesManager(tournament),
-                    icon: const Icon(Icons.sports_esports, size: 18),
-                    label: const Text('Manage games'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.accent,
-                    ),
-                  ),
-                ),
-              if (widget.tournamentId != null && _canManageBracket)
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.white70),
-                  tooltip: 'Bracket actions',
-                  onSelected: _handleMenuSelection,
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: _actionGenerate,
-                      child: const Text('Generate bracket'),
-                    ),
-                    PopupMenuItem<String>(
-                      value: _actionRegenerate,
-                      child: const Text('Rebuild (reset games)'),
-                    ),
-                    const PopupMenuDivider(),
-                    PopupMenuItem<String>(
-                      value: _actionDelete,
-                      child: const Text('Delete bracket'),
-                    ),
-                  ],
-                ),
-            ],
-          ),
-        ),
+        _buildBracketHeader(tournament),
         Expanded(
           child: _BracketLayout(
             rounds: roundGroups,
@@ -584,6 +547,515 @@ class TournamentBracketPageState extends State<TournamentBracketPage> {
       }
     }
     return true;
+  }
+
+  bool _hasLadderStructure(TournamentLeaderTree? tree) {
+    if (tree == null) return false;
+    // Single elimination
+    if (tree.root != null || tree.preGames.isNotEmpty) return true;
+    // Double elimination
+    if (tree.winnersBracket != null || tree.losersBracket != null) return true;
+    // Round robin
+    if (tree.games.isNotEmpty) return true;
+    return false;
+  }
+
+  Widget _buildRoundRobinView(GetTournamentDto tournament, TournamentLeaderTree tree) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_isUpdating)
+          const LinearProgressIndicator(
+            minHeight: 2,
+            backgroundColor: Colors.transparent,
+          ),
+        _buildBracketHeader(tournament),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Standings table
+                _buildStandingsTable(tree.standings),
+                const SizedBox(height: 24),
+                // Games list
+                _buildRoundRobinGames(tree.games),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStandingsTable(List<RoundRobinStanding> standings) {
+    if (standings.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Standings',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const Divider(color: Colors.white12, height: 1),
+          // Header row
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            color: Colors.white.withOpacity(0.05),
+            child: const Row(
+              children: [
+                SizedBox(width: 32, child: Text('#', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold))),
+                Expanded(child: Text('Team', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold))),
+                SizedBox(width: 40, child: Text('W', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold))),
+                SizedBox(width: 40, child: Text('D', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold))),
+                SizedBox(width: 40, child: Text('L', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold))),
+                SizedBox(width: 50, child: Text('Pts', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold))),
+              ],
+            ),
+          ),
+          // Data rows
+          ...standings.asMap().entries.map((entry) {
+            final index = entry.key;
+            final standing = entry.value;
+            final isTop = index < 2;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isTop ? AppColors.accent.withOpacity(0.1) : null,
+                border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 32,
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: isTop ? AppColors.accent : Colors.white70,
+                        fontWeight: isTop ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      standing.teamName,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(width: 40, child: Text('${standing.wins}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white))),
+                  SizedBox(width: 40, child: Text('${standing.draws}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white))),
+                  SizedBox(width: 40, child: Text('${standing.losses}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white))),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      '${standing.points}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: isTop ? AppColors.accent : Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoundRobinGames(List<TournamentLeaderNode> games) {
+    if (games.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Group games by round
+    final gamesByRound = <int, List<TournamentLeaderNode>>{};
+    for (final game in games) {
+      final round = game.roundNumber ?? 1;
+      gamesByRound.putIfAbsent(round, () => []).add(game);
+    }
+
+    final sortedRounds = gamesByRound.keys.toList()..sort();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Matches',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...sortedRounds.map((round) {
+          final roundGames = gamesByRound[round]!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 8),
+                child: Text(
+                  'Round $round',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              ...roundGames.map((node) => _buildRoundRobinGameCard(node)),
+            ],
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildRoundRobinGameCard(TournamentLeaderNode node) {
+    final teams = node.teamEntries;
+    final team1 = teams.isNotEmpty ? teams[0] : null;
+    final team2 = teams.length > 1 ? teams[1] : null;
+    final isCompleted = node.status?.toLowerCase() == 'completed';
+
+    return GestureDetector(
+      onTap: _canEditMatches && node.gameId != null
+          ? () => _handleMatchEdit(node)
+          : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isCompleted ? AppColors.accent.withOpacity(0.5) : Colors.white12,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                team1?.name ?? 'TBD',
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.right,
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: isCompleted ? AppColors.accent.withOpacity(0.2) : Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                node.hasScores
+                    ? '${team1?.score?.toInt() ?? 0} - ${team2?.score?.toInt() ?? 0}'
+                    : 'vs',
+                style: TextStyle(
+                  color: isCompleted ? AppColors.accent : Colors.white70,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                team2?.name ?? 'TBD',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            if (_canEditMatches && node.gameId != null)
+              const Icon(Icons.chevron_right, color: Colors.white38, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDoubleEliminationView(GetTournamentDto tournament, TournamentLeaderTree tree) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_isUpdating)
+          const LinearProgressIndicator(
+            minHeight: 2,
+            backgroundColor: Colors.transparent,
+          ),
+        _buildBracketHeader(tournament),
+        Expanded(
+          child: DefaultTabController(
+            length: 3,
+            child: Column(
+              children: [
+                Container(
+                  color: Colors.black.withOpacity(0.3),
+                  child: const TabBar(
+                    indicatorColor: AppColors.accent,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.white54,
+                    tabs: [
+                      Tab(text: 'Winners'),
+                      Tab(text: 'Losers'),
+                      Tab(text: 'Grand Final'),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      _buildBracketTab(tree.winnersBracket, 'Winners Bracket'),
+                      _buildBracketTab(tree.losersBracket, 'Losers Bracket'),
+                      _buildGrandFinalTab(tree.grandFinal),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBracketHeader(GetTournamentDto tournament) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Format: ${_formatLeaderType(tournament.leaderType)}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (widget.tournamentId != null && _canManageBracket)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: TextButton.icon(
+                onPressed: () => _openGamesManager(tournament),
+                icon: const Icon(Icons.sports_esports, size: 18),
+                label: const Text('Manage games'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.accent,
+                ),
+              ),
+            ),
+          if (widget.tournamentId != null && _canManageBracket)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white70),
+              tooltip: 'Bracket actions',
+              onSelected: _handleMenuSelection,
+              itemBuilder: (context) => [
+                const PopupMenuItem<String>(
+                  value: _actionGenerate,
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.account_tree_outlined, size: 20),
+                    title: Text('Generate from games'),
+                    subtitle: Text('Use existing games', style: TextStyle(fontSize: 11)),
+                  ),
+                ),
+                const PopupMenuItem<String>(
+                  value: _actionGenerateWithGames,
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.auto_fix_high, size: 20),
+                    title: Text('Generate with teams'),
+                    subtitle: Text('Create new games from teams', style: TextStyle(fontSize: 11)),
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem<String>(
+                  value: _actionDelete,
+                  child: Text('Delete bracket'),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatLeaderType(String type) {
+    return type
+        .split('-')
+        .map((word) => word.isNotEmpty ? '${word[0].toUpperCase()}${word.substring(1)}' : '')
+        .join(' ');
+  }
+
+  Widget _buildBracketTab(TournamentLeaderNode? bracket, String title) {
+    if (bracket == null) {
+      return Center(
+        child: Text(
+          '$title not available',
+          style: const TextStyle(color: Colors.white54),
+        ),
+      );
+    }
+
+    final rounds = _collectRounds(bracket);
+    final groups = <_BracketRoundGroup>[];
+    final total = rounds.length;
+    for (var index = 0; index < rounds.length; index++) {
+      final titleText = _resolveRoundTitle(index, total, rounds[index]);
+      groups.add(_BracketRoundGroup(title: titleText, nodes: rounds[index]));
+    }
+
+    if (groups.isEmpty) {
+      return Center(
+        child: Text(
+          '$title has no matches yet',
+          style: const TextStyle(color: Colors.white54),
+        ),
+      );
+    }
+
+    return _BracketLayout(
+      rounds: groups,
+      onEditRequested: _canEditMatches ? _handleMatchEdit : null,
+      getGameNotifier: _getGameNotifier,
+    );
+  }
+
+  Widget _buildGrandFinalTab(TournamentLeaderNode? grandFinal) {
+    if (grandFinal == null || grandFinal.gameId == null) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.emoji_events, color: Colors.amber, size: 64),
+            SizedBox(height: 16),
+            Text(
+              'Grand Final',
+              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Waiting for bracket winners...',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final teams = grandFinal.teamEntries;
+    final team1 = teams.isNotEmpty ? teams[0] : null;
+    final team2 = teams.length > 1 ? teams[1] : null;
+    final isCompleted = grandFinal.status?.toLowerCase() == 'completed';
+
+    return Center(
+      child: GestureDetector(
+        onTap: _canEditMatches ? () => _handleMatchEdit(grandFinal) : null,
+        child: Container(
+          margin: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.amber.withOpacity(0.2),
+                Colors.orange.withOpacity(0.1),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.amber.withOpacity(0.5), width: 2),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.emoji_events, color: Colors.amber, size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                'Grand Final',
+                style: TextStyle(color: Colors.amber, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Column(
+                    children: [
+                      Text(
+                        team1?.name ?? 'Winners Bracket',
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
+                      if (isCompleted && team1?.score != null)
+                        Text(
+                          '${team1!.score!.toInt()}',
+                          style: const TextStyle(color: Colors.amber, fontSize: 32, fontWeight: FontWeight.bold),
+                        ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      'vs',
+                      style: TextStyle(color: Colors.white54, fontSize: 16),
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      Text(
+                        team2?.name ?? 'Losers Bracket',
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                      ),
+                      if (isCompleted && team2?.score != null)
+                        Text(
+                          '${team2!.score!.toInt()}',
+                          style: const TextStyle(color: Colors.amber, fontSize: 32, fontWeight: FontWeight.bold),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+              if (isCompleted)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'COMPLETED',
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _handleMatchEdit(TournamentLeaderNode node) async {
@@ -1020,8 +1492,8 @@ class _BracketSetupMessage extends StatelessWidget {
     required this.secondaryMessage,
     required this.canGenerate,
     required this.isProcessing,
-    this.onGenerate,
-    this.onGenerateFresh,
+    this.onGenerateFromGames,
+    this.onGenerateWithTeams,
     this.onRefresh,
   });
 
@@ -1029,8 +1501,8 @@ class _BracketSetupMessage extends StatelessWidget {
   final String secondaryMessage;
   final bool canGenerate;
   final bool isProcessing;
-  final Future<void> Function()? onGenerate;
-  final Future<void> Function()? onGenerateFresh;
+  final Future<void> Function()? onGenerateFromGames;
+  final Future<void> Function()? onGenerateWithTeams;
   final Future<void> Function()? onRefresh;
 
   @override
@@ -1066,24 +1538,24 @@ class _BracketSetupMessage extends StatelessWidget {
               const SizedBox(height: 20),
               const CircularProgressIndicator(),
             ] else ...[
-              if (canGenerate && onGenerate != null) ...[
+              if (onGenerateFromGames != null) ...[
                 const SizedBox(height: 20),
                 ElevatedButton.icon(
-                  onPressed: () => onGenerate?.call(),
+                  onPressed: () => onGenerateFromGames?.call(),
                   icon: const Icon(Icons.account_tree_outlined),
-                  label: const Text('Generate bracket'),
+                  label: const Text('Generate from games'),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.black,
                     backgroundColor: AppColors.accent,
                   ),
                 ),
               ],
-              if (canGenerate && onGenerateFresh != null) ...[
+              if (canGenerate && onGenerateWithTeams != null) ...[
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
-                  onPressed: () => onGenerateFresh?.call(),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Generate fresh (reset games)'),
+                  onPressed: () => onGenerateWithTeams?.call(),
+                  icon: const Icon(Icons.auto_fix_high),
+                  label: const Text('Generate with teams'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.accent,
                     side: BorderSide(color: AppColors.accent.withOpacity(0.6)),

@@ -170,50 +170,6 @@ class GamesTabState extends State<GamesTab> {
     }
   }
 
-  Future<void> _autoGenerateBracket() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Auto-generate Bracket'),
-        content: const Text('This will delete all existing games and automatically generate the tournament bracket. Continue?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Generate')),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    try {
-      // First delete all existing games
-      final gamesToDelete = List<GameGetDto>.from(_games);
-      for (final game in gamesToDelete) {
-        try {
-          await GamesRemoteService.deleteGame(widget.roomId, game.id);
-        } catch (e) {
-          debugPrint('Failed to delete game ${game.id}: $e');
-        }
-      }
-
-      // Then generate the bracket
-      await LadderRemoteService.generateLadder(roomId: widget.roomId);
-      
-      // Reload games list
-      await _loadGames();
-      
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bracket generated successfully')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to generate bracket: $e')),
-      );
-    }
-  }
-
   Future<void> _deleteAllGames() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -395,19 +351,6 @@ class GamesTabState extends State<GamesTab> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: ElevatedButton.icon(
-                        onPressed: _autoGenerateBracket,
-                        icon: const Icon(Icons.auto_fix_high),
-                        label: const Text('Auto-generate Bracket'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  if (_games.isNotEmpty && !widget.bracketExists)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ElevatedButton.icon(
                         onPressed: _deleteAllGames,
                         icon: const Icon(Icons.delete_forever),
                         label: const Text('Delete All Games'),
@@ -436,7 +379,7 @@ class GamesTabState extends State<GamesTab> {
                           horizontal: 16,
                           vertical: 10,
                         ),
-                        onTap: () => _openGameEditScreen(game),
+                        onTap: widget.bracketExists ? null : () => _openGameEditScreen(game),
                         title: Text(
                           title,
                           style: const TextStyle(
@@ -504,11 +447,12 @@ class GamesTabState extends State<GamesTab> {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.white70),
-                              tooltip: 'Edit match',
-                              onPressed: () => _openGameEditScreen(game),
-                            ),
+                            if (!widget.bracketExists)
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.white70),
+                                tooltip: 'Edit match',
+                                onPressed: () => _openGameEditScreen(game),
+                              ),
                             if (!widget.bracketExists)
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.redAccent),

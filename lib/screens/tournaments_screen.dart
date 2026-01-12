@@ -33,7 +33,17 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     fetchRooms();
-    _loadWeatherWithLocation();
+    _loadSavedCityAndWeather();
+  }
+
+  Future<void> _loadSavedCityAndWeather() async {
+    final savedCity = await JwtStorageService.getCity();
+    if (savedCity != null && savedCity.isNotEmpty) {
+      _cityController.text = savedCity;
+      await _loadWeatherByCity();
+    } else {
+      await _loadWeatherWithLocation();
+    }
   }
 
   @override
@@ -146,6 +156,8 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _forecast = forecast;
       });
+      // Save city for next app launch
+      await JwtStorageService.storeCity(city);
     } catch (e) {
       if (!mounted) return;
       setState(() {

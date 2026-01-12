@@ -14,8 +14,6 @@ class RegisterScreen extends StatefulWidget {
 enum AuthMode { login, register }
 
 class RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -25,6 +23,24 @@ class RegisterScreenState extends State<RegisterScreen> {
   AuthMode _selectedMode = AuthMode.register;
 
   void _submit() {
+    // Validate passwords match
+    if (_passwordController.text != _repeatPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match.")),
+      );
+      return;
+    }
+
+    // Validate fields are not empty
+    if (_nicknameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill in all fields.")),
+      );
+      return;
+    }
+
     AuthRemoteService.register(
           RegisterDto(
             email: _emailController.text,
@@ -112,31 +128,10 @@ class RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 30),
 
                 TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: "Name",
-                    prefixIcon: const Icon(Icons.person),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                TextField(
-                  controller: _surnameController,
-                  decoration: InputDecoration(
-                    labelText: "Surname",
-                    prefixIcon: const Icon(Icons.person_outline),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                TextField(
                   controller: _nicknameController,
                   decoration: InputDecoration(
-                    labelText: "Nickname",
-                    prefixIcon: const Icon(Icons.badge),
+                    labelText: "Username",
+                    prefixIcon: const Icon(Icons.person),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(100),
                     ),

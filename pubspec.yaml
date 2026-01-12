@@ -37,6 +37,7 @@ dependencies:
   dartz: 
   loading_animation_widget:
   image_picker:
+  image: ^4.3.0
   flutter:
     sdk: flutter
   cupertino_icons:
