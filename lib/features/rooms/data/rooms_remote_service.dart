@@ -42,6 +42,15 @@ class RoomsRemoteService {
     }
   }
 
+  /// Sets the room icon (base64), or removes it when [icon] is null.
+  static Future<Response> updateRoomIcon(int roomId, String? icon) async {
+    try {
+      return await _dio.patch('/room/$roomId', data: {'icon': icon});
+    } on DioException catch (e) {
+      throw Exception('Failed to update room icon: ${e.response?.data}');
+    }
+  }
+
   static Future<Response> deleteRoom(int roomId) async {
     try {
       return await _dio.delete('/room/$roomId');

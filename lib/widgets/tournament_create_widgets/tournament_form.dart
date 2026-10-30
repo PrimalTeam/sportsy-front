@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sportsy_front/core/images/image_helpers.dart';
+import 'package:sportsy_front/core/presentation/widgets/entity_avatar.dart';
 import 'package:sportsy_front/dto/create_room_dto.dart';
 import 'package:sportsy_front/dto/team_add_dto.dart';
 import 'package:sportsy_front/dto/tournament_dto.dart' show TournamentDto, InfoDto, GamesDto, InternalConfigDto;
@@ -37,6 +39,12 @@ class _TournamentFormState extends State<TournamentForm> {
   String tournamentEndDateController = "";
   List<GamesDto> games = [GamesDto("PENDING")];
   LadderType _selectedLadderType = LadderType.singleElimination;
+  Uint8List? _roomIcon;
+
+  Future<void> _pickRoomIcon() async {
+    final icon = await pickCompressedImage();
+    if (icon != null) setState(() => _roomIcon = icon);
+  }
 
   void createTournamentClickAction() async {
     if (tournamentTitleController.text != "") {
@@ -54,6 +62,7 @@ class _TournamentFormState extends State<TournamentForm> {
           teams,
           internalConfig: InternalConfigDto(autogenerateGamesFromLadder: true),
         ),
+        icon: _roomIcon == null ? null : encodeImage(_roomIcon!),
       );
 
       try {
@@ -150,6 +159,32 @@ class _TournamentFormState extends State<TournamentForm> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        SizedBox(height: 15),
+        Row(
+          children: [
+            EntityAvatar(
+              image: _roomIcon,
+              fallbackIcon: Icons.emoji_events,
+              size: 72,
+              onEdit: _pickRoomIcon,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                _roomIcon == null
+                    ? 'Tap to add a tournament icon'
+                    : 'Tournament icon',
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ),
+            if (_roomIcon != null)
+              IconButton(
+                tooltip: 'Remove icon',
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _roomIcon = null),
+              ),
+          ],
+        ),
         SizedBox(height: 15),
         TextField(
           controller: tournamentTitleController,

@@ -396,7 +396,10 @@ class _MyHomePageState extends State<MyHomePage> {
       body = ListView.builder(
         itemCount: filteredGames.length,
         itemBuilder: (context, index) {
-          return GameHomeWidget(gameDetails: filteredGames[index]);
+          return GameHomeWidget(
+            gameDetails: filteredGames[index],
+            onReturn: fetchRooms,
+          );
         },
       );
     }

@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/core/images/image_helpers.dart';
+import 'package:sportsy_front/core/presentation/widgets/entity_avatar.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/get_tournament_dto.dart';
 
 class TournamentOverviewTab extends StatelessWidget {
-  const TournamentOverviewTab({super.key, required this.tournament});
+  const TournamentOverviewTab({super.key, required this.tournament, this.icon});
 
   final GetTournamentDto tournament;
 
+  /// Base64-encoded room icon, shown above the details when set.
+  final String? icon;
+
   @override
   Widget build(BuildContext context) {
+    final iconBytes = decodeImage(icon);
     return Container(
       color: AppColors.background,
       child: SingleChildScrollView(
@@ -16,6 +22,10 @@ class TournamentOverviewTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (iconBytes != null) ...[
+              Center(child: EntityAvatar(image: iconBytes, size: 96)),
+              const SizedBox(height: 16.0),
+            ],
             Text(
               'Title',
               style: const TextStyle(

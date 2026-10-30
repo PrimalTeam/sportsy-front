@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/core/images/image_helpers.dart';
+import 'package:sportsy_front/core/presentation/widgets/entity_avatar.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
 import 'package:sportsy_front/features/tournaments/data/ladder_remote_service.dart';
@@ -41,6 +43,40 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
   bool _autoGenerate = false;
   bool _updatingAuto = false;
   String? _autoConfigError;
+
+  // Icon saved in this session; overrides the one loaded with the room.
+  String? _savedIcon;
+  bool _iconChanged = false;
+  bool _savingIcon = false;
+  String? get _roomIcon => _iconChanged ? _savedIcon : _roomInfo?.icon;
+
+  Future<void> _changeRoomIcon({bool remove = false}) async {
+    String? icon;
+    if (!remove) {
+      final bytes = await pickCompressedImage();
+      if (bytes == null) return;
+      icon = encodeImage(bytes);
+    }
+    setState(() => _savingIcon = true);
+    try {
+      await RoomsRemoteService.updateRoomIcon(widget.roomId, icon);
+      if (!mounted) return;
+      setState(() {
+        _savedIcon = icon;
+        _iconChanged = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(remove ? 'Icon removed' : 'Icon updated')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update icon: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _savingIcon = false);
+    }
+  }
 
   @override
   void initState() {
@@ -174,6 +210,21 @@ class _TournamentInfoEditPageState extends State<TournamentInfoEdit>
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            SizedBox(height: 15),
+            EntityAvatar(
+              image: decodeImage(_roomIcon),
+              fallbackIcon: Icons.emoji_events,
+              size: 96,
+              isLoading: _savingIcon,
+              onEdit: _canManage ? () => _changeRoomIcon() : null,
+            ),
+            if (_canManage && _roomIcon != null)
+              TextButton(
+                onPressed: _savingIcon
+                    ? null
+                    : () => _changeRoomIcon(remove: true),
+                child: const Text('Remove icon'),
+              ),
             SizedBox(height: 15),
             TextField(
               controller: tournamentTitleController,

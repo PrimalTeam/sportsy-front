@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/core/images/image_helpers.dart';
+import 'package:sportsy_front/core/presentation/widgets/entity_avatar.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/get_room_dto.dart';
 import 'package:sportsy_front/features/rooms/data/rooms_remote_service.dart';
@@ -7,13 +9,16 @@ import 'package:sportsy_front/screens/tournament_info.dart';
 
 class GameHomeWidget extends StatelessWidget {
   final GetRoomDto gameDetails;
-  const GameHomeWidget({super.key, required this.gameDetails});
+
+  /// Called after returning from the tournament, e.g. to reload a changed icon.
+  final VoidCallback? onReturn;
+  const GameHomeWidget({super.key, required this.gameDetails, this.onReturn});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => TournamentInfoPage(
@@ -22,6 +27,7 @@ class GameHomeWidget extends StatelessWidget {
             ),
           ),
         );
+        onReturn?.call();
       },
       child: Container(
         padding: const EdgeInsets.all(20),
@@ -36,24 +42,9 @@ class GameHomeWidget extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xff130f34),
-              ),
-              child: Icon(
-                gameDetails.icon == "football"
-                    ? Icons.sports_soccer
-                    : gameDetails.icon == "basketball"
-                    ? Icons.sports_basketball
-                    : gameDetails.icon == "volleyball"
-                    ? Icons.sports_volleyball
-                    : Icons.question_mark,
-                color: Colors.white,
-              ),
+            EntityAvatar(
+              image: decodeImage(gameDetails.icon),
+              fallbackIcon: Icons.emoji_events,
             ),
             const SizedBox(width: 10),
             Text(gameDetails.name),
