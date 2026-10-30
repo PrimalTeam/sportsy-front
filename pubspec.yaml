@@ -28,7 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  google_fonts:
+  google_fonts: ^8.0.0
   jwt_decoder:     
   json_annotation: ^4.9.0 
   json_serializable:
