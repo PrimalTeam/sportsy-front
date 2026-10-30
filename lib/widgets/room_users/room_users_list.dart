@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sportsy_front/core/auth/jwt_storage_service.dart';
+import 'package:sportsy_front/core/images/image_helpers.dart';
+import 'package:sportsy_front/core/presentation/widgets/entity_avatar.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/get_room_users_dto.dart';
 import 'package:sportsy_front/features/room_users/data/room_users_remote_service.dart';
@@ -67,6 +69,14 @@ class RoomUsersListState extends State<RoomUsersList> {
               final user = snapshot.data![index];
               final isCurrentUser = _currentUsername != null && user.user.username == _currentUsername;
               return ListTile(
+                leading: EntityAvatar(
+                  image: decodeImage(user.user.avatar),
+                  fallbackText:
+                      user.user.username.isNotEmpty
+                          ? user.user.username[0].toUpperCase()
+                          : '?',
+                  size: 44,
+                ),
                 title: Text(
                   user.user.username,
                   style: TextStyle(color: AppColors.secondary),
@@ -87,7 +97,7 @@ class RoomUsersListState extends State<RoomUsersList> {
                           MaterialPageRoute(
                             builder:
                                 (_) => UserProfilePage(
-                                  username: user.user.username,
+                                  email: user.user.email,
                                 ),
                           ),
                         );

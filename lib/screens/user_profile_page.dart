@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:sportsy_front/core/images/image_helpers.dart';
+import 'package:sportsy_front/core/presentation/widgets/entity_avatar.dart';
 import 'package:sportsy_front/custom_colors.dart';
 import 'package:sportsy_front/dto/user_profile_dto.dart';
 import 'package:sportsy_front/features/user_profile/data/user_profile_remote_service.dart';
@@ -6,8 +8,8 @@ import 'package:sportsy_front/widgets/app_bar.dart';
 import 'package:sportsy_front/core/auth/jwt_storage_service.dart';
 
 class UserProfilePage extends StatefulWidget {
-  const UserProfilePage({super.key, required this.username});
-  final String username;
+  const UserProfilePage({super.key, required this.email});
+  final String email;
 
   @override
   State<UserProfilePage> createState() => _UserProfilePageState();
@@ -16,17 +18,65 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   late Future<UserProfileDto> _profileFuture;
   UserProfileDto? _profile;
+  String? _currentUserEmail;
+
+  // Avatar saved in this session; overrides the one loaded with the profile.
+  String? _savedAvatar;
+  bool _avatarChanged = false;
+  bool _savingAvatar = false;
+
+  bool get _isOwnProfile =>
+      _currentUserEmail != null && _profile?.email == _currentUserEmail;
 
   @override
   void initState() {
     super.initState();
-    _profileFuture = UserProfileRemoteService.getUserProfile(widget.username);
+    _profileFuture = UserProfileRemoteService.getUserProfile(widget.email);
+    _loadCurrentUser();
   }
 
-  void _refreshProfile(String? newUsername) {
+  Future<void> _loadCurrentUser() async {
+    final token = await JwtStorageService.getToken();
+    if (token == null || !mounted) return;
+    setState(() {
+      _currentUserEmail = JwtStorageService.getDataFromToken(token, 'email');
+    });
+  }
+
+  Future<void> _changeAvatar({bool remove = false}) async {
+    String? avatar;
+    if (!remove) {
+      final bytes = await pickCompressedImage();
+      if (bytes == null) return;
+      avatar = encodeImage(bytes);
+    }
+    setState(() => _savingAvatar = true);
+    try {
+      final updated = await UserProfileRemoteService.updateAvatar(avatar);
+      if (!mounted) return;
+      setState(() {
+        _savedAvatar = updated.avatar;
+        _avatarChanged = true;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to update avatar: ${e.toString().replaceFirst('Exception: ', '')}',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _savingAvatar = false);
+    }
+  }
+
+  void _refreshProfile(String? newEmail) {
     setState(() {
       _profileFuture = UserProfileRemoteService.getUserProfile(
-        newUsername ?? _profile?.username ?? widget.username,
+        newEmail ?? _profile?.email ?? widget.email,
       );
     });
   }
@@ -104,21 +154,29 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         ),
                       ],
                     ),
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.transparent,
-                      child: Text(
-                        profile.username.isNotEmpty
-                            ? profile.username[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          fontSize: 40,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    child: EntityAvatar(
+                      image: decodeImage(
+                        _avatarChanged ? _savedAvatar : profile.avatar,
                       ),
+                      fallbackText:
+                          profile.username.isNotEmpty
+                              ? profile.username[0].toUpperCase()
+                              : '?',
+                      size: 100,
+                      backgroundColor: Colors.transparent,
+                      isLoading: _savingAvatar,
+                      onEdit: _isOwnProfile ? () => _changeAvatar() : null,
                     ),
                   ),
+                  if (_isOwnProfile &&
+                      (_avatarChanged ? _savedAvatar : profile.avatar) != null)
+                    TextButton(
+                      onPressed:
+                          _savingAvatar
+                              ? null
+                              : () => _changeAvatar(remove: true),
+                      child: const Text('Remove photo'),
+                    ),
                   const SizedBox(height: 24),
 
                   // Profile Card - Editable Fields
@@ -263,7 +321,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             backgroundColor: Colors.green,
           ),
         );
-        _refreshProfile(field == 'username' ? newValue : null);
+        _refreshProfile(field == 'email' ? newValue : null);
       }
     } catch (e) {
       if (mounted) {

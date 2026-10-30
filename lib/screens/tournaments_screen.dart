@@ -253,7 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_currentUserEmail == null) {
       return const Center(child: Text('Brak danych profilu.'));
     }
-    return UserProfilePage(username: _currentUserEmail!);
+    return UserProfilePage(email: _currentUserEmail!);
   }
 
   Widget _buildWeatherSection() {
