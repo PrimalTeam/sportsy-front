@@ -31,12 +31,16 @@ class UserDto {
   final List<dynamic>? roles;
   final String createdAt;
 
+  /// Base64-encoded profile picture.
+  final String? avatar;
+
   UserDto({
     required this.id,
     required this.username,
     required this.email,
     this.roles,
     required this.createdAt,
+    this.avatar,
   });
 
   factory UserDto.fromJson(Map<String, dynamic> json) =>

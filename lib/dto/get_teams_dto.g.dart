@@ -10,10 +10,7 @@ GetTeamsDto _$GetTeamsDtoFromJson(Map<String, dynamic> json) => GetTeamsDto(
   name: json['name'] as String,
   id: (json['id'] as num).toInt(),
   tournamentId: (json['tournamentId'] as num).toInt(),
-  icon:
-      json['icon'] == null
-          ? null
-          : IconDto.fromJson(json['icon'] as Map<String, dynamic>),
+  icon: IconDto.tryParse(json['icon']),
 );
 
 Map<String, dynamic> _$GetTeamsDtoToJson(GetTeamsDto instance) =>

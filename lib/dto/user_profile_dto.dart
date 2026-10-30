@@ -5,12 +5,16 @@ class UserProfileDto {
   final List<String> roles;
   final DateTime createdAt;
 
+  /// Base64-encoded profile picture.
+  final String? avatar;
+
   UserProfileDto({
     required this.id,
     required this.username,
     required this.email,
     required this.roles,
     required this.createdAt,
+    this.avatar,
   });
 
   factory UserProfileDto.fromJson(Map<String, dynamic> json) {
@@ -25,6 +29,7 @@ class UserProfileDto {
       createdAt:
           DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
+      avatar: json['avatar'] as String?,
     );
   }
 }

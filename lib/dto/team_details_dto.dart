@@ -34,16 +34,7 @@ class TeamDetailsDto {
     );
   }
 
-  static IconDto? _parseIcon(Object? raw) {
-    if (raw is Map<String, dynamic>) {
-      try {
-        return IconDto.fromJson(raw);
-      } catch (_) {
-        return null;
-      }
-    }
-    return null;
-  }
+  static IconDto? _parseIcon(Object? raw) => IconDto.tryParse(raw);
 
   static List<String> _parseTeamUsers(Object? raw) {
     if (raw is! List) return const [];
