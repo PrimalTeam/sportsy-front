@@ -152,15 +152,7 @@ class GameGetDto {
       tournamentId ??= _asInt(entry['tournamentId']);
       tournamentId ??= _asInt(fallbackTournamentId);
 
-      IconDto? icon;
-      final iconRaw = source['icon'];
-      if (iconRaw is Map<String, dynamic>) {
-        try {
-          icon = IconDto.fromJson(iconRaw);
-        } catch (_) {
-          icon = null;
-        }
-      }
+      final icon = IconDto.tryParse(source['icon']);
 
       return GetTeamsDto(
         name: name,

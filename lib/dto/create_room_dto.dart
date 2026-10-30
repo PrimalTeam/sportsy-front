@@ -7,7 +7,10 @@ part 'create_room_dto.g.dart';
 class CreateRoomDto {
   final String name;
   final TournamentDto tournament;
-  CreateRoomDto(this.name, this.tournament);
+
+  /// Base64-encoded room icon.
+  final String? icon;
+  CreateRoomDto(this.name, this.tournament, {this.icon});
 
   factory CreateRoomDto.fromJson(Map<String, dynamic> json) =>
       _$CreateRoomDtoFromJson(json);

@@ -230,13 +230,7 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
           fallbackTournamentId ??
           0;
 
-      IconDto? icon;
-      final iconRaw = candidate['icon'] ?? entry['icon'];
-      if (iconRaw is Map<String, dynamic>) {
-        try {
-          icon = IconDto.fromJson(iconRaw);
-        } catch (_) {}
-      }
+      final icon = IconDto.tryParse(candidate['icon'] ?? entry['icon']);
 
       if (id != null && name != null) {
         return GetTeamsDto(
@@ -334,7 +328,10 @@ class _TournamentInfoPageState extends State<TournamentInfoPage>
     switch (id) {
       case _tabInfo:
         if (_roomInfo?.tournament != null) {
-          return TournamentOverviewTab(tournament: _roomInfo!.tournament!);
+          return TournamentOverviewTab(
+            tournament: _roomInfo!.tournament!,
+            icon: _roomInfo!.icon,
+          );
         }
         return const Center(
           child: Text(

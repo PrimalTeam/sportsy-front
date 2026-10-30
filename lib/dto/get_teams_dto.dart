@@ -8,6 +8,7 @@ part 'get_teams_dto.g.dart';
 @JsonSerializable()
 class GetTeamsDto {
   final int id;
+  @JsonKey(fromJson: IconDto.tryParse)
   final IconDto? icon;
   final String name;
   final int tournamentId;
@@ -36,6 +37,23 @@ class IconDto {
   factory IconDto.fromJson(Map<String, dynamic> json) =>
       _$IconDtoFromJson(json);
   Map<String, dynamic> toJson() => _$IconDtoToJson(this);
+
+  /// Parses an icon as the API returns it: a base64 string, or the older
+  /// serialized-Buffer map. Returns null when there is no usable image.
+  static IconDto? tryParse(Object? raw) {
+    if (raw is String) {
+      final data = const Base64Converter().fromJson(raw);
+      return data == null ? null : IconDto(type: 'base64', data: data);
+    }
+    if (raw is Map<String, dynamic>) {
+      try {
+        return IconDto.fromJson(raw);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
 }
 
 class Base64Converter implements JsonConverter<Uint8List?, Object?> {

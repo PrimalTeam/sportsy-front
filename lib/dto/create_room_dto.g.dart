@@ -10,7 +10,12 @@ CreateRoomDto _$CreateRoomDtoFromJson(Map<String, dynamic> json) =>
     CreateRoomDto(
       json['name'] as String,
       TournamentDto.fromJson(json['tournament'] as Map<String, dynamic>),
+      icon: json['icon'] as String?,
     );
 
 Map<String, dynamic> _$CreateRoomDtoToJson(CreateRoomDto instance) =>
-    <String, dynamic>{'name': instance.name, 'tournament': instance.tournament};
+    <String, dynamic>{
+      'name': instance.name,
+      'tournament': instance.tournament,
+      'icon': instance.icon,
+    };

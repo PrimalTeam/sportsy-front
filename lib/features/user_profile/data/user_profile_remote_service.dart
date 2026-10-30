@@ -7,9 +7,11 @@ class UserProfileRemoteService {
 
   static Dio get _dio => ApiClient.instance;
 
-  static Future<UserProfileDto> getUserProfile(String username) async {
+  static Future<UserProfileDto> getUserProfile(String email) async {
     try {
-      final response = await _dio.get('/user/profile/$username');
+      final response = await _dio.get(
+        '/user/profile/${Uri.encodeComponent(email)}',
+      );
       final data = response.data as Map<String, dynamic>;
       return UserProfileDto.fromJson(data);
     } on DioException catch (e) {
@@ -31,6 +33,19 @@ class UserProfileRemoteService {
       return UserProfileDto.fromJson(data);
     } on DioException catch (e) {
       throw Exception('Failed to update profile: ${e.response?.data}');
+    }
+  }
+
+  /// Sets the current user's avatar (base64), or removes it when null.
+  static Future<UserProfileDto> updateAvatar(String? avatar) async {
+    try {
+      final response = await _dio.patch(
+        '/user/profile',
+        data: {'avatar': avatar},
+      );
+      return UserProfileDto.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw Exception('Failed to update avatar: ${e.response?.data}');
     }
   }
 }

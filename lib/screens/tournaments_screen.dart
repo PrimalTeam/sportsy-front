@@ -253,7 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_currentUserEmail == null) {
       return const Center(child: Text('Brak danych profilu.'));
     }
-    return UserProfilePage(username: _currentUserEmail!);
+    return UserProfilePage(email: _currentUserEmail!);
   }
 
   Widget _buildWeatherSection() {
@@ -396,7 +396,10 @@ class _MyHomePageState extends State<MyHomePage> {
       body = ListView.builder(
         itemCount: filteredGames.length,
         itemBuilder: (context, index) {
-          return GameHomeWidget(gameDetails: filteredGames[index]);
+          return GameHomeWidget(
+            gameDetails: filteredGames[index],
+            onReturn: fetchRooms,
+          );
         },
       );
     }
