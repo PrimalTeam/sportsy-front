@@ -1,3 +1,5 @@
-String get websocketUrl => 'https://civisafe.online/';
-String get websocketBaseUrl => 'https://civisafe.online';
+import 'api_config.dart';
+
+String get websocketUrl => '$baseApiUrl/';
+String get websocketBaseUrl => baseApiUrl;
 const String gamesNamespace = '/games';
